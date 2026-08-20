@@ -1,3 +1,10 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Wellbeing Check-in</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:wght@500;600&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
 <style>
   :root{
     --bg: #F5F7F3;
@@ -12,11 +19,14 @@
     --shadow: 0 20px 50px -25px rgba(31,75,65,0.35);
   }
   * { box-sizing: border-box; }
-  #wb-root{
+  html, body { margin:0; padding:0; background: var(--bg); }
+  body{
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-    background: var(--bg);
     color: var(--ink);
-    min-height: 100%;
+    min-height: 100vh;
+  }
+  #wb-root{
+    min-height: 100vh;
     width: 100%;
     padding: 40px 16px 60px;
     display: flex;
@@ -113,6 +123,7 @@
     width:56px; height:56px; border-radius:50%; margin:0 auto 20px; background: var(--teal);
     display:flex; align-items:center; justify-content:center; color:#fff; font-size:26px;
   }
+  .wb-done-icon.error{ background: var(--clay); }
   .wb-note{
     margin-top:22px; padding:16px 18px; background:#FBF6EC; border:1px solid #EAD9AE;
     border-radius:12px; font-size:13.5px; color:#6B551F; line-height:1.55; text-align:left;
@@ -151,19 +162,14 @@
   .wb-back{ font-size:12.5px; color:var(--ink-soft); cursor:pointer; margin-bottom:16px; display:inline-flex; align-items:center; gap:5px; }
   .wb-back:hover{ color:var(--teal-deep); }
 </style>
-
+</head>
+<body>
 <div id="wb-root">
   <div class="wb-shell" id="wb-shell"></div>
 </div>
 
 <script>
 (function(){
-  const FONT_LINK = document.createElement('link');
-  FONT_LINK.rel = 'stylesheet';
-  FONT_LINK.href = 'https://fonts.googleapis.com/css2?family=Fraunces:wght@500;600&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap';
-  document.head.appendChild(FONT_LINK);
-
-  const HR_ID = '1111111';
   const shell = document.getElementById('wb-shell');
 
   const QUESTIONS = [
@@ -184,13 +190,12 @@
   ];
 
   let state = {
-    screen: 'entry',   // entry | quiz | done | hr | hr-detail
+    screen: 'entry',   // entry | checking | quiz | done | error | hr
     empId: '',
     step: 0,
     answers: {},
     error: '',
     hrData: [],
-    hrLoading: false,
     hrDetail: null
   };
 
@@ -232,15 +237,31 @@
     shell.appendChild(wrap);
     input.focus();
 
-    function startFlow(){
+    async function startFlow(){
       if(!state.empId){ set({error:'Please enter your employee ID.'}); return; }
-      if(state.empId === HR_ID){
-        set({ screen:'hr', error:'', hrLoading:true });
-        loadHrData();
-      } else {
-        set({ screen:'quiz', step:0, answers:{}, error:'' });
-      }
+      set({ screen:'checking' });
+      // The server decides whether this ID is HR \u2014 nothing HR-specific lives in this file.
+      try{
+        const res = await fetch(`/api/responses?hrId=${encodeURIComponent(state.empId)}`);
+        if(res.ok){
+          const data = await res.json();
+          shell.classList.add('wide');
+          set({ screen:'hr', hrData: data.records || [] });
+          return;
+        }
+      }catch(e){ /* network hiccup: fall through and treat as an employee */ }
+      set({ screen:'quiz', step:0, answers:{}, error:'' });
     }
+  }
+
+  function screenChecking(){
+    const wrap = el('div');
+    wrap.appendChild(eyebrow('Employee wellbeing check-in'));
+    const card = el('div','wb-card');
+    const p = el('div','wb-empty'); p.textContent = 'One moment\u2026';
+    card.appendChild(p);
+    wrap.appendChild(card);
+    shell.appendChild(wrap);
   }
 
   // ---------- QUIZ SCREEN ----------
@@ -313,19 +334,18 @@
   }
 
   async function submit(){
-    const record = {
-      employeeId: state.empId,
-      submittedAt: new Date().toISOString(),
-      answers: state.answers
-    };
-    const safeId = state.empId.replace(/[\s\/\\'"]+/g, '-');
-    const key = `response:${safeId}:${Date.now()}`;
     try{
-      await window.storage.set(key, JSON.stringify(record), true);
+      const res = await fetch('/api/submit', {
+        method:'POST',
+        headers:{ 'Content-Type':'application/json' },
+        body: JSON.stringify({ employeeId: state.empId, answers: state.answers })
+      });
+      if(!res.ok) throw new Error('submit failed: ' + res.status);
+      set({ screen:'done' });
     }catch(err){
-      console.error('Storage error saving check-in:', err);
+      console.error('Error saving check-in:', err);
+      set({ screen:'error' });
     }
-    set({ screen:'done' });
   }
 
   // ---------- DONE SCREEN ----------
@@ -349,31 +369,28 @@
     shell.appendChild(wrap);
   }
 
-  // ---------- HR DASHBOARD ----------
-  async function loadHrData(){
-    try{
-      const list = await window.storage.list('response:', true);
-      const keys = (list && list.keys) || [];
-      const records = [];
-      for(const k of keys){
-        try{
-          const res = await window.storage.get(k, true);
-          if(res && res.value){ records.push(JSON.parse(res.value)); }
-        }catch(e){ /* skip unreadable key */ }
-      }
-      records.sort((a,b)=> new Date(b.submittedAt) - new Date(a.submittedAt));
-      state.hrData = records;
-    }catch(err){
-      console.error('Storage error loading HR data:', err);
-      state.hrData = [];
-    }
-    state.hrLoading = false;
-    render();
+  // ---------- ERROR SCREEN ----------
+  function screenError(){
+    const wrap = el('div');
+    wrap.appendChild(eyebrow('Check-in'));
+    const card = el('div','wb-card');
+    const box = el('div','wb-done-wrap');
+    const icon = el('div','wb-done-icon error'); icon.textContent = '!';
+    const h = el('div','wb-q'); h.style.marginBottom='6px'; h.textContent = 'Something went wrong.';
+    const p = el('div'); p.style.cssText='color:var(--ink-soft);font-size:14.5px;line-height:1.6;';
+    p.textContent = 'We couldn\u2019t save your check-in. Your answers are still filled in \u2014 try submitting again.';
+    box.appendChild(icon); box.appendChild(h); box.appendChild(p);
+    const btn = el('button','wb-btn'); btn.style.marginTop='24px'; btn.textContent='Try again';
+    btn.addEventListener('click', ()=> set({ screen:'quiz', step: QUESTIONS.length-1 }));
+    box.appendChild(btn);
+    card.appendChild(box);
+    wrap.appendChild(card);
+    shell.appendChild(wrap);
   }
 
+  // ---------- HR DASHBOARD ----------
   function screenHr(){
-    const wrap = el('div','wb-shell-inner');
-    shell.classList.add('wide');
+    const wrap = el('div');
     wrap.appendChild(eyebrow('HR dashboard'));
     wrap.appendChild(h1('Employee check-ins'));
     wrap.appendChild(sub('All submitted wellbeing responses, most recent first.'));
@@ -381,14 +398,6 @@
     const backLink = el('div','wb-back'); backLink.textContent = '\u2190 Sign out';
     backLink.addEventListener('click', ()=> { shell.classList.remove('wide'); set({ screen:'entry', empId:'', error:'' }); });
     wrap.appendChild(backLink);
-
-    if(state.hrLoading){
-      const card = el('div','wb-card');
-      const p = el('div','wb-empty'); p.textContent = 'Loading responses\u2026';
-      card.appendChild(p); wrap.appendChild(card);
-      shell.appendChild(wrap);
-      return;
-    }
 
     const data = state.hrData;
     const total = data.length;
@@ -411,7 +420,7 @@
       const thead = document.createElement('thead');
       thead.innerHTML = '<tr><th>Employee ID</th><th>Submitted</th><th>Avg. wellbeing</th><th>Status</th></tr>';
       const tbody = document.createElement('tbody');
-      data.forEach((r, idx)=>{
+      data.forEach((r)=>{
         const tr = document.createElement('tr'); tr.className='clickable';
         const avg = scaleAvg(r.answers);
         const flag = needsFollowup(r);
@@ -510,11 +519,15 @@
 
   const SCREENS = {
     entry: screenEntry,
+    checking: screenChecking,
     quiz: screenQuiz,
     done: screenDone,
+    error: screenError,
     hr: screenHr
   };
 
   render();
 })();
 </script>
+</body>
+</html>
