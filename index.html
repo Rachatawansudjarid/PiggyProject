@@ -199,7 +199,13 @@
     hrDetail: null
   };
 
-  function render(){ shell.innerHTML = ''; SCREENS[state.screen](); }
+  function render(){
+    shell.innerHTML = '';
+    // The detail modal is appended outside #wb-shell, so clearing shell alone
+    // doesn't remove it — clean up any leftover modal on every render.
+    document.querySelectorAll('.wb-modal-bg').forEach(node => node.remove());
+    SCREENS[state.screen]();
+  }
   function set(patch){ Object.assign(state, patch); render(); }
 
   function scaleAvg(a){
