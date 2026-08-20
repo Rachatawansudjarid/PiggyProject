@@ -1,0 +1,23 @@
+# Environment variables (contains your Upstash credentials)
+.env
+.env.local
+.env.*.local
+ 
+# Dependencies
+node_modules/
+ 
+# Vercel
+.vercel
+ 
+# OS files
+.DS_Store
+Thumbs.db
+ 
+# Editor
+.vscode/*
+!.vscode/extensions.json
+ 
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
