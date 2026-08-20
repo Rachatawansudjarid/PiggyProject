@@ -1,0 +1,520 @@
+<style>
+  :root{
+    --bg: #F5F7F3;
+    --card: #FFFFFF;
+    --ink: #202A24;
+    --ink-soft: #5B685F;
+    --teal: #2F6F62;
+    --teal-deep: #1F4B41;
+    --gold: #C99A3B;
+    --clay: #C1613F;
+    --line: #E2E7DF;
+    --shadow: 0 20px 50px -25px rgba(31,75,65,0.35);
+  }
+  * { box-sizing: border-box; }
+  #wb-root{
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    background: var(--bg);
+    color: var(--ink);
+    min-height: 100%;
+    width: 100%;
+    padding: 40px 16px 60px;
+    display: flex;
+    justify-content: center;
+    position: relative;
+    overflow-x: hidden;
+  }
+  #wb-root::before{
+    content:"";
+    position:absolute; top:-120px; right:-120px;
+    width:340px; height:340px; border-radius:50%;
+    background: radial-gradient(circle, rgba(47,111,98,0.14), transparent 70%);
+    pointer-events:none;
+  }
+  .wb-shell{ width:100%; max-width:600px; position:relative; z-index:1; }
+  .wb-shell.wide{ max-width:920px; }
+  .wb-eyebrow{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:11px; letter-spacing:.14em; text-transform:uppercase;
+    color: var(--teal-deep); font-weight:600; margin-bottom:10px;
+    display:flex; align-items:center; gap:8px;
+  }
+  .wb-pulse{
+    width:8px; height:8px; border-radius:50%; background: var(--teal);
+    animation: wbBreathe 3.2s ease-in-out infinite;
+  }
+  @keyframes wbBreathe{
+    0%,100%{ transform: scale(1); opacity:.6; }
+    50%{ transform: scale(1.9); opacity:1; }
+  }
+  .wb-h1{
+    font-family:'Fraunces', Georgia, serif;
+    font-weight:600; font-size:32px; line-height:1.15;
+    margin:0 0 8px; color: var(--teal-deep);
+  }
+  .wb-sub{ color: var(--ink-soft); font-size:15px; line-height:1.5; margin:0 0 28px; max-width:46ch; }
+  .wb-card{
+    background: var(--card); border:1px solid var(--line); border-radius:18px;
+    padding:32px; box-shadow: var(--shadow);
+  }
+  .wb-label{ font-size:13px; font-weight:600; color:var(--ink); margin-bottom:8px; display:block; }
+  .wb-input{
+    width:100%; padding:14px 16px; border-radius:10px; border:1.5px solid var(--line);
+    font-family:'IBM Plex Mono', monospace; font-size:16px; letter-spacing:.03em;
+    background:#FBFCFA; color:var(--ink); outline:none; transition: border-color .15s;
+  }
+  .wb-input:focus{ border-color: var(--teal); }
+  .wb-textarea{
+    width:100%; min-height:90px; padding:14px 16px; border-radius:10px; border:1.5px solid var(--line);
+    font-family:'Inter',sans-serif; font-size:14.5px; background:#FBFCFA; color:var(--ink);
+    outline:none; resize:vertical; transition: border-color .15s; line-height:1.5;
+  }
+  .wb-textarea:focus{ border-color: var(--teal); }
+  .wb-btn{
+    appearance:none; border:none; cursor:pointer; font-family:'Inter',sans-serif;
+    font-weight:600; font-size:14.5px; padding:13px 24px; border-radius:10px;
+    background: var(--teal); color:#fff; transition: transform .12s, background .15s;
+  }
+  .wb-btn:hover{ background: var(--teal-deep); }
+  .wb-btn:active{ transform: scale(.97); }
+  .wb-btn:disabled{ background:#B7C2BB; cursor:not-allowed; }
+  .wb-btn.ghost{ background:transparent; color:var(--teal-deep); border:1.5px solid var(--line); }
+  .wb-btn.ghost:hover{ background:#F0F3EE; }
+  .wb-row{ display:flex; justify-content:space-between; align-items:center; margin-top:24px; gap:12px; }
+  .wb-error{ color: var(--clay); font-size:13px; margin-top:10px; min-height:16px; }
+
+  .wb-trail{ display:flex; gap:6px; margin-bottom:26px; }
+  .wb-dot{ height:5px; flex:1; border-radius:3px; background: var(--line); transition: background .2s; }
+  .wb-dot.done{ background: var(--teal); }
+  .wb-dot.active{ background: var(--gold); }
+
+  .wb-qnum{ font-family:'IBM Plex Mono', monospace; font-size:12px; color:var(--ink-soft); margin-bottom:10px; }
+  .wb-q{ font-family:'Fraunces', Georgia, serif; font-size:22px; font-weight:600; color:var(--ink); margin:0 0 22px; line-height:1.35; }
+  .wb-scale{ display:flex; flex-direction:column; gap:8px; }
+  .wb-opt{
+    display:flex; align-items:center; gap:14px; padding:13px 16px; border-radius:10px;
+    border:1.5px solid var(--line); cursor:pointer; transition: border-color .15s, background .15s;
+    background:#FBFCFA;
+  }
+  .wb-opt:hover{ border-color:#BFD3CC; }
+  .wb-opt.sel{ border-color: var(--teal); background: #EEF5F2; }
+  .wb-opt .n{
+    width:26px; height:26px; border-radius:50%; border:1.5px solid var(--line);
+    display:flex; align-items:center; justify-content:center; font-family:'IBM Plex Mono',monospace;
+    font-size:12px; color:var(--ink-soft); flex-shrink:0; background:#fff;
+  }
+  .wb-opt.sel .n{ border-color:var(--teal); background:var(--teal); color:#fff; }
+  .wb-opt .t{ font-size:14.5px; color:var(--ink); }
+  .wb-yn{ display:flex; gap:10px; }
+  .wb-yn .wb-opt{ flex:1; justify-content:center; }
+
+  .wb-done-wrap{ text-align:center; padding:20px 6px; }
+  .wb-done-icon{
+    width:56px; height:56px; border-radius:50%; margin:0 auto 20px; background: var(--teal);
+    display:flex; align-items:center; justify-content:center; color:#fff; font-size:26px;
+  }
+  .wb-note{
+    margin-top:22px; padding:16px 18px; background:#FBF6EC; border:1px solid #EAD9AE;
+    border-radius:12px; font-size:13.5px; color:#6B551F; line-height:1.55; text-align:left;
+  }
+
+  /* HR dashboard */
+  .wb-stats{ display:flex; gap:14px; margin-bottom:22px; flex-wrap:wrap; }
+  .wb-stat{ flex:1; min-width:130px; background:var(--card); border:1px solid var(--line); border-radius:14px; padding:18px 20px; }
+  .wb-stat .v{ font-family:'Fraunces',serif; font-size:28px; font-weight:600; color:var(--teal-deep); }
+  .wb-stat .l{ font-size:12px; color:var(--ink-soft); margin-top:4px; }
+  .wb-table-wrap{ background:var(--card); border:1px solid var(--line); border-radius:16px; overflow:hidden; box-shadow: var(--shadow); }
+  table.wb-table{ width:100%; border-collapse:collapse; font-size:13.5px; }
+  table.wb-table th{
+    text-align:left; padding:14px 16px; background:#F0F3EE; color:var(--ink-soft);
+    font-weight:600; font-size:11px; letter-spacing:.06em; text-transform:uppercase;
+    border-bottom:1px solid var(--line);
+  }
+  table.wb-table td{ padding:14px 16px; border-bottom:1px solid var(--line); vertical-align:middle; }
+  table.wb-table tr:last-child td{ border-bottom:none; }
+  table.wb-table tr.clickable{ cursor:pointer; transition: background .12s; }
+  table.wb-table tr.clickable:hover{ background:#F7F9F6; }
+  .wb-flag{ display:inline-flex; align-items:center; gap:6px; font-size:11.5px; font-weight:600; padding:4px 10px; border-radius:20px; }
+  .wb-flag.warn{ background:#FBEDE6; color:var(--clay); }
+  .wb-flag.ok{ background:#EAF3EE; color:var(--teal-deep); }
+  .wb-empty{ text-align:center; padding:50px 20px; color:var(--ink-soft); font-size:14px; }
+
+  .wb-modal-bg{ position:fixed; inset:0; background:rgba(20,30,25,0.45); display:flex; align-items:center; justify-content:center; padding:20px; z-index:50; }
+  .wb-modal{ background:#fff; border-radius:16px; max-width:520px; width:100%; max-height:82vh; overflow-y:auto; padding:28px; }
+  .wb-modal h3{ font-family:'Fraunces',serif; margin:0 0 4px; font-size:20px; color:var(--teal-deep); }
+  .wb-modal .meta{ font-size:12.5px; color:var(--ink-soft); margin-bottom:20px; font-family:'IBM Plex Mono',monospace; }
+  .wb-ans{ padding:12px 0; border-bottom:1px solid var(--line); }
+  .wb-ans:last-child{ border-bottom:none; }
+  .wb-ans .q{ font-size:12.5px; color:var(--ink-soft); margin-bottom:4px; }
+  .wb-ans .a{ font-size:14.5px; color:var(--ink); font-weight:500; }
+  .wb-close{ margin-top:20px; width:100%; }
+  .wb-back{ font-size:12.5px; color:var(--ink-soft); cursor:pointer; margin-bottom:16px; display:inline-flex; align-items:center; gap:5px; }
+  .wb-back:hover{ color:var(--teal-deep); }
+</style>
+
+<div id="wb-root">
+  <div class="wb-shell" id="wb-shell"></div>
+</div>
+
+<script>
+(function(){
+  const FONT_LINK = document.createElement('link');
+  FONT_LINK.rel = 'stylesheet';
+  FONT_LINK.href = 'https://fonts.googleapis.com/css2?family=Fraunces:wght@500;600&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap';
+  document.head.appendChild(FONT_LINK);
+
+  const HR_ID = '1111111';
+  const shell = document.getElementById('wb-shell');
+
+  const QUESTIONS = [
+    { id:'mood', q:'How would you describe your overall mood this week?',
+      type:'scale', labels:['Very low','Low','Okay','Good','Very good'] },
+    { id:'stress', q:'How manageable has your stress level felt lately?',
+      type:'scale', labels:['Overwhelming','Difficult','Manageable','Mostly fine','Very manageable'] },
+    { id:'sleep', q:'How would you rate your sleep quality recently?',
+      type:'scale', labels:['Very poor','Poor','Okay','Good','Very good'] },
+    { id:'workload', q:'How manageable is your current workload?',
+      type:'scale', labels:['Unmanageable','Heavy','Okay','Manageable','Very manageable'] },
+    { id:'support', q:'How supported do you feel by your team or manager?',
+      type:'scale', labels:['Not at all','A little','Somewhat','Mostly','Very supported'] },
+    { id:'balance', q:'How satisfied are you with your work-life balance?',
+      type:'scale', labels:['Not satisfied','Slightly','Neutral','Satisfied','Very satisfied'] },
+    { id:'notes', q:'Anything you\u2019d like HR to know? (optional)', type:'text' },
+    { id:'followup', q:'Would you like someone from HR to reach out to you directly?', type:'yesno' }
+  ];
+
+  let state = {
+    screen: 'entry',   // entry | quiz | done | hr | hr-detail
+    empId: '',
+    step: 0,
+    answers: {},
+    error: '',
+    hrData: [],
+    hrLoading: false,
+    hrDetail: null
+  };
+
+  function render(){ shell.innerHTML = ''; SCREENS[state.screen](); }
+  function set(patch){ Object.assign(state, patch); render(); }
+
+  function scaleAvg(a){
+    const keys = ['mood','stress','sleep','workload','support','balance'];
+    const vals = keys.map(k=>a[k]).filter(v=>typeof v === 'number');
+    if(!vals.length) return null;
+    return vals.reduce((s,v)=>s+v,0)/vals.length;
+  }
+
+  // ---------- ENTRY SCREEN ----------
+  function screenEntry(){
+    const wrap = el('div');
+    wrap.appendChild(eyebrow('Employee wellbeing check-in'));
+    wrap.appendChild(h1('A few minutes, just for you.'));
+    wrap.appendChild(sub('Enter your employee ID to start a short, private check-in. Your responses go to HR to help support you.'));
+
+    const card = el('div','wb-card');
+    const label = el('label','wb-label'); label.textContent='Employee ID'; label.setAttribute('for','wb-id-input');
+    const input = document.createElement('input');
+    input.className='wb-input'; input.id='wb-id-input'; input.placeholder='e.g. 4821093'; input.inputMode='numeric';
+    input.value = state.empId;
+    input.addEventListener('input', e=>{ state.empId = e.target.value.trim(); });
+    input.addEventListener('keydown', e=>{ if(e.key==='Enter') startFlow(); });
+
+    const err = el('div','wb-error'); err.textContent = state.error;
+
+    const row = el('div','wb-row');
+    const spacer = el('div'); spacer.style.flex='1';
+    const btn = el('button','wb-btn'); btn.textContent='Continue';
+    btn.addEventListener('click', startFlow);
+
+    card.appendChild(label); card.appendChild(input); card.appendChild(err);
+    row.appendChild(spacer); row.appendChild(btn); card.appendChild(row);
+    wrap.appendChild(card);
+    shell.appendChild(wrap);
+    input.focus();
+
+    function startFlow(){
+      if(!state.empId){ set({error:'Please enter your employee ID.'}); return; }
+      if(state.empId === HR_ID){
+        set({ screen:'hr', error:'', hrLoading:true });
+        loadHrData();
+      } else {
+        set({ screen:'quiz', step:0, answers:{}, error:'' });
+      }
+    }
+  }
+
+  // ---------- QUIZ SCREEN ----------
+  function screenQuiz(){
+    const q = QUESTIONS[state.step];
+    const wrap = el('div');
+    wrap.appendChild(eyebrow('Check-in \u00b7 ' + state.empId));
+
+    const trail = el('div','wb-trail');
+    QUESTIONS.forEach((_,i)=>{
+      const d = el('div','wb-dot' + (i<state.step?' done':i===state.step?' active':''));
+      trail.appendChild(d);
+    });
+
+    const card = el('div','wb-card');
+    const qnum = el('div','wb-qnum'); qnum.textContent = `Question ${state.step+1} of ${QUESTIONS.length}`;
+    const qtext = el('div','wb-q'); qtext.textContent = q.q;
+    card.appendChild(qnum); card.appendChild(qtext);
+
+    if(q.type === 'scale'){
+      const box = el('div','wb-scale');
+      q.labels.forEach((lab,i)=>{
+        const val = i+1;
+        const opt = el('div','wb-opt' + (state.answers[q.id]===val?' sel':''));
+        const n = el('div','n'); n.textContent = val;
+        const t = el('div','t'); t.textContent = lab;
+        opt.appendChild(n); opt.appendChild(t);
+        opt.addEventListener('click', ()=>{ state.answers[q.id]=val; render(); });
+        box.appendChild(opt);
+      });
+      card.appendChild(box);
+    } else if(q.type === 'text'){
+      const ta = document.createElement('textarea');
+      ta.className='wb-textarea'; ta.placeholder='Optional \u2014 share as much or as little as you\u2019d like.';
+      ta.value = state.answers[q.id] || '';
+      ta.addEventListener('input', e=>{ state.answers[q.id]=e.target.value; });
+      card.appendChild(ta);
+    } else if(q.type === 'yesno'){
+      const box = el('div','wb-yn');
+      ['Yes','No'].forEach(lab=>{
+        const opt = el('div','wb-opt' + (state.answers[q.id]===lab?' sel':''));
+        const t = el('div','t'); t.textContent = lab;
+        opt.appendChild(t);
+        opt.addEventListener('click', ()=>{ state.answers[q.id]=lab; render(); });
+        box.appendChild(opt);
+      });
+      card.appendChild(box);
+    }
+
+    const row = el('div','wb-row');
+    const back = el('button','wb-btn ghost'); back.textContent = state.step===0 ? 'Cancel' : 'Back';
+    back.addEventListener('click', ()=>{
+      if(state.step===0){ set({screen:'entry', empId:'', error:''}); }
+      else { set({ step: state.step-1 }); }
+    });
+    const canNext = q.type==='text' || (state.answers[q.id] !== undefined && state.answers[q.id] !== '');
+    const next = el('button','wb-btn'); next.textContent = state.step === QUESTIONS.length-1 ? 'Submit' : 'Next';
+    next.disabled = !canNext;
+    next.addEventListener('click', async ()=>{
+      if(!canNext) return;
+      if(state.step === QUESTIONS.length-1){ await submit(); }
+      else { set({ step: state.step+1 }); }
+    });
+    row.appendChild(back); row.appendChild(next);
+    card.appendChild(row);
+
+    wrap.appendChild(trail);
+    wrap.appendChild(card);
+    shell.appendChild(wrap);
+  }
+
+  async function submit(){
+    const record = {
+      employeeId: state.empId,
+      submittedAt: new Date().toISOString(),
+      answers: state.answers
+    };
+    const safeId = state.empId.replace(/[\s\/\\'"]+/g, '-');
+    const key = `response:${safeId}:${Date.now()}`;
+    try{
+      await window.storage.set(key, JSON.stringify(record), true);
+    }catch(err){
+      console.error('Storage error saving check-in:', err);
+    }
+    set({ screen:'done' });
+  }
+
+  // ---------- DONE SCREEN ----------
+  function screenDone(){
+    const wrap = el('div');
+    wrap.appendChild(eyebrow('Check-in complete'));
+    const card = el('div','wb-card');
+    const box = el('div','wb-done-wrap');
+    const icon = el('div','wb-done-icon'); icon.textContent = '\u2713';
+    const h = el('div','wb-q'); h.style.marginBottom='6px'; h.textContent = 'Thank you.';
+    const p = el('div'); p.style.cssText='color:var(--ink-soft);font-size:14.5px;line-height:1.6;';
+    p.textContent = 'Your responses have been sent to HR. If you asked for a follow-up, someone will reach out to you soon.';
+    const note = el('div','wb-note');
+    note.textContent = 'If things feel difficult right now, you don\u2019t need to wait for a follow-up \u2014 you can reach out to your organization\u2019s Employee Assistance Program or a mental health professional at any time.';
+    box.appendChild(icon); box.appendChild(h); box.appendChild(p); box.appendChild(note);
+    const btn = el('button','wb-btn'); btn.style.marginTop='24px'; btn.textContent='Done';
+    btn.addEventListener('click', ()=> set({ screen:'entry', empId:'', answers:{}, step:0, error:'' }));
+    box.appendChild(btn);
+    card.appendChild(box);
+    wrap.appendChild(card);
+    shell.appendChild(wrap);
+  }
+
+  // ---------- HR DASHBOARD ----------
+  async function loadHrData(){
+    try{
+      const list = await window.storage.list('response:', true);
+      const keys = (list && list.keys) || [];
+      const records = [];
+      for(const k of keys){
+        try{
+          const res = await window.storage.get(k, true);
+          if(res && res.value){ records.push(JSON.parse(res.value)); }
+        }catch(e){ /* skip unreadable key */ }
+      }
+      records.sort((a,b)=> new Date(b.submittedAt) - new Date(a.submittedAt));
+      state.hrData = records;
+    }catch(err){
+      console.error('Storage error loading HR data:', err);
+      state.hrData = [];
+    }
+    state.hrLoading = false;
+    render();
+  }
+
+  function screenHr(){
+    const wrap = el('div','wb-shell-inner');
+    shell.classList.add('wide');
+    wrap.appendChild(eyebrow('HR dashboard'));
+    wrap.appendChild(h1('Employee check-ins'));
+    wrap.appendChild(sub('All submitted wellbeing responses, most recent first.'));
+
+    const backLink = el('div','wb-back'); backLink.textContent = '\u2190 Sign out';
+    backLink.addEventListener('click', ()=> { shell.classList.remove('wide'); set({ screen:'entry', empId:'', error:'' }); });
+    wrap.appendChild(backLink);
+
+    if(state.hrLoading){
+      const card = el('div','wb-card');
+      const p = el('div','wb-empty'); p.textContent = 'Loading responses\u2026';
+      card.appendChild(p); wrap.appendChild(card);
+      shell.appendChild(wrap);
+      return;
+    }
+
+    const data = state.hrData;
+    const total = data.length;
+    const flagged = data.filter(r => needsFollowup(r)).length;
+    const uniqueEmployees = new Set(data.map(r=>r.employeeId)).size;
+
+    const stats = el('div','wb-stats');
+    stats.appendChild(statBox(total, 'Total check-ins'));
+    stats.appendChild(statBox(uniqueEmployees, 'Employees'));
+    stats.appendChild(statBox(flagged, 'Flagged for follow-up'));
+    wrap.appendChild(stats);
+
+    if(!total){
+      const card = el('div','wb-table-wrap');
+      const p = el('div','wb-empty'); p.textContent = 'No check-ins submitted yet.';
+      card.appendChild(p); wrap.appendChild(card);
+    } else {
+      const tableWrap = el('div','wb-table-wrap');
+      const table = document.createElement('table'); table.className='wb-table';
+      const thead = document.createElement('thead');
+      thead.innerHTML = '<tr><th>Employee ID</th><th>Submitted</th><th>Avg. wellbeing</th><th>Status</th></tr>';
+      const tbody = document.createElement('tbody');
+      data.forEach((r, idx)=>{
+        const tr = document.createElement('tr'); tr.className='clickable';
+        const avg = scaleAvg(r.answers);
+        const flag = needsFollowup(r);
+        tr.innerHTML = `
+          <td style="font-family:'IBM Plex Mono',monospace;">${escapeHtml(r.employeeId)}</td>
+          <td>${formatDate(r.submittedAt)}</td>
+          <td>${avg!==null ? avg.toFixed(1)+' / 5' : '\u2014'}</td>
+          <td></td>
+        `;
+        const statusTd = tr.children[3];
+        const flagEl = el('span', 'wb-flag ' + (flag ? 'warn' : 'ok'));
+        flagEl.textContent = flag ? 'Follow-up' : 'Stable';
+        statusTd.appendChild(flagEl);
+        tr.addEventListener('click', ()=> set({ hrDetail: r }));
+        tbody.appendChild(tr);
+      });
+      table.appendChild(thead); table.appendChild(tbody);
+      tableWrap.appendChild(table);
+      wrap.appendChild(tableWrap);
+    }
+
+    shell.appendChild(wrap);
+
+    if(state.hrDetail){
+      renderDetailModal(state.hrDetail);
+    }
+  }
+
+  function needsFollowup(r){
+    if(r.answers && r.answers.followup === 'Yes') return true;
+    const avg = scaleAvg(r.answers);
+    return avg !== null && avg <= 2.3;
+  }
+
+  function renderDetailModal(record){
+    const bg = el('div','wb-modal-bg');
+    const modal = el('div','wb-modal');
+    const h = el('h3'); h.textContent = 'Employee ' + record.employeeId;
+    const meta = el('div','meta'); meta.textContent = formatDate(record.submittedAt);
+    modal.appendChild(h); modal.appendChild(meta);
+
+    QUESTIONS.forEach(q=>{
+      const val = record.answers[q.id];
+      const row = el('div','wb-ans');
+      const qEl = el('div','q'); qEl.textContent = q.q;
+      const aEl = el('div','a');
+      if(q.type==='scale'){
+        aEl.textContent = val ? `${val} / 5 \u2014 ${q.labels[val-1]}` : 'No answer';
+      } else if(!val){
+        aEl.textContent = '\u2014';
+        aEl.style.color = 'var(--ink-soft)';
+      } else {
+        aEl.textContent = val;
+      }
+      row.appendChild(qEl); row.appendChild(aEl);
+      modal.appendChild(row);
+    });
+
+    const close = el('button','wb-btn ghost wb-close'); close.textContent='Close';
+    close.addEventListener('click', ()=> set({ hrDetail:null }));
+    modal.appendChild(close);
+    bg.appendChild(modal);
+    bg.addEventListener('click', e=>{ if(e.target===bg) set({ hrDetail:null }); });
+    document.getElementById('wb-root').appendChild(bg);
+  }
+
+  // ---------- helpers ----------
+  function el(tag, cls){
+    const e = document.createElement(tag);
+    if(cls) e.className = cls;
+    return e;
+  }
+  function statBox(val,label){
+    const b = el('div','wb-stat');
+    const v = el('div','v'); v.textContent = val;
+    const l = el('div','l'); l.textContent = label;
+    b.appendChild(v); b.appendChild(l);
+    return b;
+  }
+  function eyebrow(text){
+    const e = el('div','wb-eyebrow');
+    const dot = el('div','wb-pulse');
+    const span = document.createElement('span'); span.textContent = text;
+    e.appendChild(dot); e.appendChild(span);
+    return e;
+  }
+  function h1(text){ const e = el('h1','wb-h1'); e.textContent = text; return e; }
+  function sub(text){ const e = el('p','wb-sub'); e.textContent = text; return e; }
+  function formatDate(iso){
+    const d = new Date(iso);
+    return d.toLocaleString(undefined, { month:'short', day:'numeric', year:'numeric', hour:'2-digit', minute:'2-digit' });
+  }
+  function escapeHtml(s){
+    return String(s).replace(/[&<>"']/g, m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+  }
+
+  const SCREENS = {
+    entry: screenEntry,
+    quiz: screenQuiz,
+    done: screenDone,
+    hr: screenHr
+  };
+
+  render();
+})();
+</script>
