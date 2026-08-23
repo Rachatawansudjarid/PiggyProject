@@ -385,7 +385,7 @@
 
     const row = el('div','wb-row');
     const spacer = el('div'); spacer.style.flex='1';
-    const btn = el('button','wb-btn'); btn.textContent='Continue';
+    const btn = el('button','wb-btn'); btn.textContent='ต่อไป';
     btn.addEventListener('click', startFlow);
 
     row.appendChild(spacer); row.appendChild(btn); card.appendChild(row);
@@ -456,7 +456,7 @@
     wrap.appendChild(eyebrow('Check-in \u00b7 ' + state.empId));
 
     const card = el('div','wb-card');
-    const qnum = el('div','wb-qnum'); qnum.textContent = 'Answer all 10 questions';
+    const qnum = el('div','wb-qnum'); qnum.textContent = 'ตอบคำถามทั้งหมด 10 ข้อ';
     const qtext = el('div','wb-q'); qtext.textContent = 'ในช่วง 1 เดือนที่ผ่านมา';
     card.appendChild(qnum); card.appendChild(qtext);
 
@@ -494,10 +494,10 @@
     table.appendChild(tbody); tableWrap.appendChild(table); card.appendChild(tableWrap);
 
     const row = el('div','wb-row');
-    const back = el('button','wb-btn ghost'); back.textContent = 'Cancel';
+    const back = el('button','wb-btn ghost'); back.textContent = 'ยกเลิก';
     back.addEventListener('click', ()=> set({screen:'entry', empId:'', empName:'', error:''}));
     const canSubmit = QUESTIONS.every(question => state.answers[question.id] !== undefined && state.answers[question.id] !== '');
-    const next = el('button','wb-btn'); next.textContent = 'Submit'; next.disabled = !canSubmit;
+    const next = el('button','wb-btn'); next.textContent = 'ส่งคำตอบ'; next.disabled = !canSubmit;
     next.addEventListener('click', async ()=>{
       const complete = QUESTIONS.every(question => state.answers[question.id] !== undefined && state.answers[question.id] !== '');
       if(complete) set({ screen:'hse', hseAnswers:{} });
