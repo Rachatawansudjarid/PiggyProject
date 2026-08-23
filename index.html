@@ -362,6 +362,29 @@
     return values.length ? values.reduce((sum, value)=>sum + value, 0) / values.length : 0;
   }
 
+  function thaiPssBand(score){
+    if(score <= 13) return 'ความเครียดระดับต่ำ';
+    if(score <= 26) return 'ความเครียดระดับปานกลาง';
+    return 'ความเครียดระดับสูง';
+  }
+
+  function thaiHseRisk(score){
+    if(score >= 4.5) return 'บรรลุมาตรฐานการจัดการ';
+    if(score >= 4) return 'ดี';
+    if(score >= 3) return 'ปานกลาง';
+    if(score >= 2) return 'ต่ำ';
+    return 'ควรปรับปรุง';
+  }
+
+  const THAI_HSE_DIMENSIONS = {
+    Demands:'ข้อเรียกร้องจากงาน',
+    Control:'การควบคุมงาน',
+    Support:'การสนับสนุน',
+    Relationships:'ความสัมพันธ์ในการทำงาน',
+    Role:'บทบาทหน้าที่',
+    Change:'การเปลี่ยนแปลง'
+  };
+
   // ---------- ENTRY SCREEN ----------
   function screenEntry(){
     const wrap = el('div');
@@ -589,32 +612,32 @@
   // ---------- DONE SCREEN ----------
   function screenDone(){
     const wrap = el('div');
-    wrap.appendChild(eyebrow('Check-in complete'));
+    wrap.appendChild(eyebrow('ตอบแบบประเมินเสร็จสมบูรณ์'));
     const card = el('div','wb-card');
     const box = el('div','wb-done-wrap');
     const icon = el('div','wb-done-icon'); icon.textContent = '\u2713';
-    const h = el('div','wb-q'); h.style.marginBottom='6px'; h.textContent = 'Thank you.';
+      const h = el('div','wb-q'); h.style.marginBottom='6px'; h.textContent = 'ขอบคุณสำหรับคำตอบ';
     const p = el('div'); p.style.cssText='color:var(--ink-soft);font-size:14.5px;line-height:1.6;';
-    p.textContent = 'Your responses have been sent to HR. If you asked for a follow-up, someone will reach out to you soon.';
+    p.textContent = 'ขอขอบคุณพนักงานทุกท่านที่สละเวลาและให้ความร่วมมือในการตอบแบบประเมินสุขภาพจิต ซึ่งเป็นส่วนหนึ่งของโครงงานจบการศึกษาระดับมหาวิทยาลัยของนายเกริกธรรม อ่อนลมูล';
     const score = pssScore(state.answers || {});
-    const note = el('div','wb-note');
-    note.textContent = `Your PSS-10 score is ${score} / 40 — ${pssBand(score)}. ${score >= 27 ? 'It is recommended to practice relaxation techniques or consult a professional.' : ''}`;
+      const note = el('div','wb-note');
+      note.textContent = `คะแนนความเครียด PSS-10 ของคุณคือ ${score} / 40 — ${thaiPssBand(score)}${score >= 27 ? ' แนะนำให้ฝึกเทคนิคการผ่อนคลายหรือปรึกษาผู้เชี่ยวชาญ' : ''}`;
     box.appendChild(icon); box.appendChild(h); box.appendChild(p); box.appendChild(note);
-    const hseTitle = el('div','wb-qnum'); hseTitle.textContent = 'HSE evaluation'; hseTitle.style.marginTop='24px'; hseTitle.style.textAlign='left';
+    const hseTitle = el('div','wb-qnum'); hseTitle.textContent = 'สรุปคะแนนHSE'; hseTitle.style.marginTop='24px'; hseTitle.style.textAlign='left';
     box.appendChild(hseTitle);
     const hseTable = document.createElement('table'); hseTable.className='wb-table'; hseTable.style.textAlign='left';
     const hseScoresResult = hseScores(state.hseAnswers || {});
     const overall = hseOverall(hseScoresResult);
     const overallRow = document.createElement('tr');
-    overallRow.innerHTML = `<td><strong>Overall Score</strong></td><td><strong>${overall.toFixed(2)} / 5</strong></td><td><strong>${hseRisk(overall)}</strong></td>`;
+      overallRow.innerHTML = `<td><strong>คะแนนรวม</strong></td><td><strong>${overall.toFixed(2)} / 5</strong></td><td><strong>${thaiHseRisk(overall)}</strong></td>`;
     hseTable.appendChild(overallRow);
     Object.entries(hseScoresResult).forEach(([dimension, value])=>{
       const row = document.createElement('tr');
-      row.innerHTML = `<td>${escapeHtml(dimension)}</td><td>${value.toFixed(2)} / 5</td><td>${hseRisk(value)}</td>`;
+      row.innerHTML = `<td>${escapeHtml(THAI_HSE_DIMENSIONS[dimension] || dimension)}</td><td>${value.toFixed(2)} / 5</td><td>${thaiHseRisk(value)}</td>`;
       hseTable.appendChild(row);
     });
     box.appendChild(hseTable);
-    const btn = el('button','wb-btn'); btn.style.marginTop='24px'; btn.textContent='Done';
+    const btn = el('button','wb-btn'); btn.style.marginTop='24px'; btn.textContent='เสร็จสิ้น';
     btn.addEventListener('click', ()=> set({ screen:'entry', empId:'', empName:'', answers:{}, step:0, error:'' }));
     box.appendChild(btn);
     card.appendChild(box);
