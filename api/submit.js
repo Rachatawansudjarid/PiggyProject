@@ -3,15 +3,14 @@ const { redis } = require('../lib/redis');
 // Only these fields are ever stored, no matter what the client sends.
 const PSS_IDS = ['pss1', 'pss2', 'pss3', 'pss4', 'pss5', 'pss6', 'pss7', 'pss8', 'pss9', 'pss10'];
 const HSE_IDS = Array.from({ length: 35 }, (_, index) => `hse${index + 1}`);
-const HSE_REVERSE = new Set([16, 25, 28, 33]);
+const HSE_REVERSE = new Set([3, 5, 6, 9, 12, 14, 16, 18, 20, 21, 22, 34]);
 const HSE_DIMENSIONS = {
   Demands: [3, 6, 9, 12, 16, 18, 20, 22],
   Control: [2, 10, 15, 19, 25, 30],
-  "Managers' Support": [8, 23, 29, 35],
-  'Peer Support': [4, 11, 27, 31],
-  Relationships: [5, 14, 21, 28, 33],
-  Role: [1, 7, 13, 17, 24],
-  Change: [26, 32, 34]
+  Support: [7, 8, 23, 24, 29, 31, 33, 35],
+  Relationships: [5, 14, 21, 27, 34],
+  Role: [1, 4, 11, 13, 17],
+  Change: [26, 28, 32]
 };
 
 function calculateHseScores(answers) {
@@ -27,10 +26,11 @@ function calculateHseScores(answers) {
 }
 
 function hseRisk(score) {
-  if (score >= 4) return 'Low Risk';
-  if (score >= 3.5) return 'Moderate Risk';
-  if (score >= 3) return 'High Risk';
-  return 'Critical Risk';
+  if (score >= 4.5) return 'Achieving the Management Standard';
+  if (score >= 4) return 'Good';
+  if (score >= 3) return 'Moderate';
+  if (score >= 2) return 'Low';
+  return 'Poor';
 }
 
 module.exports = async function handler(req, res) {
@@ -80,6 +80,7 @@ module.exports = async function handler(req, res) {
       cleanHseAnswers[id] = value;
     }
     const hseScores = calculateHseScores(cleanHseAnswers);
+    const hseOverall = Object.values(hseScores).reduce((sum, score) => sum + score, 0) / Object.keys(hseScores).length;
     const hseRiskLevels = Object.fromEntries(Object.entries(hseScores).map(([dimension, score]) => [dimension, hseRisk(score)]));
 
     const cleanId = employeeId.trim().slice(0, 64);
@@ -92,6 +93,8 @@ module.exports = async function handler(req, res) {
       pssScore: totalScore,
       hseAnswers: cleanHseAnswers,
       hseScores,
+      hseOverall,
+      hseOverallRisk: hseRisk(hseOverall),
       hseRiskLevels
     };
 
