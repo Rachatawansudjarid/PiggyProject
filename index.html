@@ -388,7 +388,10 @@
     back.addEventListener('click', ()=> set({screen:'entry', empId:'', empName:'', error:''}));
     const canSubmit = QUESTIONS.every(question => state.answers[question.id] !== undefined && state.answers[question.id] !== '');
     const next = el('button','wb-btn'); next.textContent = 'Submit'; next.disabled = !canSubmit;
-    next.addEventListener('click', async ()=>{ if(canSubmit) await submit(); });
+    next.addEventListener('click', async ()=>{
+      const complete = QUESTIONS.every(question => state.answers[question.id] !== undefined && state.answers[question.id] !== '');
+      if(complete) await submit();
+    });
     row.appendChild(back); row.appendChild(next);
     card.appendChild(row);
 
