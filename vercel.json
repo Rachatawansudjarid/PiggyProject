@@ -1,0 +1,7 @@
+{
+  "functions": {
+    "api/employees.js": {
+      "includeFiles": "data/employees.xlsx"
+    }
+  }
+}
