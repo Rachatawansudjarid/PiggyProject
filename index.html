@@ -155,13 +155,14 @@
   .wb-chart-card{ background:var(--card); border:1px solid var(--line); border-radius:16px; padding:22px; margin-bottom:22px; box-shadow:var(--shadow); }
   .wb-chart-title{ font-family:'Fraunces',serif; font-size:20px; color:var(--teal-deep); margin:0 0 4px; }
   .wb-chart-subtitle{ color:var(--ink-soft); font-size:12.5px; margin:0 0 20px; }
-  .wb-chart{ display:flex; align-items:flex-end; gap:14px; min-height:280px; padding:20px 8px 0; border-bottom:1px solid var(--line); }
+  .wb-chart{ display:flex; align-items:flex-end; gap:14px; min-height:280px; padding:20px 8px 0; border-bottom:1px solid var(--line); background:repeating-linear-gradient(to top, transparent 0, transparent calc(25% - 1px), #E2E7DF calc(25% - 1px), #E2E7DF 25%); }
   .wb-chart-row{ display:flex; flex:1; min-width:72px; height:260px; flex-direction:column; align-items:center; justify-content:flex-end; gap:7px; }
   .wb-chart-label{ order:3; width:100%; font-size:12px; color:var(--ink); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; text-align:center; }
-  .wb-chart-track{ order:2; display:flex; align-items:flex-end; width:100%; height:210px; background:#EEF2ED; border-radius:5px 5px 0 0; overflow:hidden; }
+  .wb-chart-track{ order:2; display:flex; align-items:flex-end; width:100%; height:210px; background:transparent; border-radius:5px 5px 0 0; overflow:hidden; }
   .wb-chart-bar{ width:100%; min-height:3px; background:var(--teal); border-radius:5px 5px 0 0; }
   .wb-chart-value{ order:1; font:12px 'IBM Plex Mono',monospace; color:var(--ink-soft); text-align:center; white-space:nowrap; }
   .wb-chart-empty{ color:var(--ink-soft); font-size:13px; }
+  .wb-chart-scale{ display:flex; justify-content:space-between; color:var(--ink-soft); font:11px 'IBM Plex Mono',monospace; margin:5px 8px 0; }
   .wb-table-wrap{ background:var(--card); border:1px solid var(--line); border-radius:16px; overflow:hidden; box-shadow: var(--shadow); }
   table.wb-table{ width:100%; border-collapse:collapse; font-size:13.5px; }
   table.wb-table th{
@@ -639,8 +640,8 @@
     wrap.appendChild(stats);
 
     const chartCard = el('div','wb-chart-card');
-    const chartTitle = el('h2','wb-chart-title'); chartTitle.textContent = 'PSS-10 by department';
-    const chartSubtitle = el('p','wb-chart-subtitle'); chartSubtitle.textContent = 'Average stress score by department · higher scores indicate higher stress';
+    const chartTitle = el('h2','wb-chart-title'); chartTitle.textContent = 'Company PSS-10 comparison';
+    const chartSubtitle = el('p','wb-chart-subtitle'); chartSubtitle.textContent = 'Average stress score for every department in the company · higher scores indicate higher stress';
     const chart = el('div','wb-chart');
     const departmentScores = {};
     data.forEach(record=>{
@@ -668,7 +669,9 @@
         chartRow.appendChild(label); chartRow.appendChild(track); chartRow.appendChild(value); chart.appendChild(chartRow);
       });
     }
-    chartCard.appendChild(chartTitle); chartCard.appendChild(chartSubtitle); chartCard.appendChild(chart); wrap.appendChild(chartCard);
+    const chartScale = el('div','wb-chart-scale');
+    chartScale.innerHTML = '<span>0</span><span>10</span><span>20</span><span>30</span><span>40</span>';
+    chartCard.appendChild(chartTitle); chartCard.appendChild(chartSubtitle); chartCard.appendChild(chart); chartCard.appendChild(chartScale); wrap.appendChild(chartCard);
 
     if(!total){
       const card = el('div','wb-table-wrap');
