@@ -365,15 +365,15 @@
   // ---------- ENTRY SCREEN ----------
   function screenEntry(){
     const wrap = el('div');
-    wrap.appendChild(eyebrow('Employee wellbeing check-in'));
-    wrap.appendChild(h1('A few minutes, just for you.'));
-    wrap.appendChild(sub('Search your name or employee ID to start a short, private check-in. Your responses go to HR to help support you.'));
+    wrap.appendChild(eyebrow('แบบทดสอบทางสุขภาพจิตของพนักงาน'));
+    wrap.appendChild(h1('ใช้เวลาเพียงไม่กี่นาทีเพื่อความเป็นอยู่ที่ดีของคุณ'));
+    wrap.appendChild(sub('ค้นหาเลขประจำตัวพนักงานหรือชื่อภาษาอังกฤษของคุณเพื่อเริ่มต้นแบบทดสอบ'));
 
     const card = el('div','wb-card');
-    const label = el('label','wb-label'); label.textContent='Find your employee record'; label.setAttribute('for','wb-id-input');
+    const label = el('label','wb-label'); label.textContent='ค้นหาพนักงาน'; label.setAttribute('for','wb-id-input');
     const search = el('div','wb-search');
     const input = document.createElement('input');
-    input.className='wb-input'; input.id='wb-id-input'; input.placeholder='Type your name or employee ID'; input.autocomplete='off';
+    input.className='wb-input'; input.id='wb-id-input'; input.placeholder='พิมพ์ชื่อภาษาอังกฤษหรือรหัสพนักงาน'; input.autocomplete='off';
     input.value = state.empName || state.empId;
     input.addEventListener('input', e=>{ searchEmployees(e.target.value); });
     input.addEventListener('keydown', e=>{ if(e.key==='Enter') startFlow(); });
@@ -399,15 +399,15 @@
       clearTimeout(searchTimer);
       results.innerHTML = '';
       const query = value.trim();
-      if(query.length < 2){ status.textContent = query ? 'Type at least 2 characters.' : ''; return; }
-      status.textContent = 'Searching...';
+      if(query.length < 2){ status.textContent = query ? 'พิมพ์อย่างน้อย 2 ตัวอักษร' : ''; return; }
+      status.textContent = 'กำลังค้นหา...';
       searchTimer = setTimeout(async ()=>{
         try{
           const res = await fetch(`/api/employees?q=${encodeURIComponent(query)}`);
           if(!res.ok) throw new Error('employee search failed');
           const data = await res.json();
           state.employeeMatches = data.employees || [];
-          status.textContent = state.employeeMatches.length ? '' : 'No matching employee found.';
+          status.textContent = state.employeeMatches.length ? '' : 'ไม่พบพนักงานที่ตรงกัน';
           state.employeeMatches.forEach(employee=>{
             const option = el('button','wb-result'); option.type='button';
             const name = el('span','name'); name.textContent = employee.name;
@@ -419,12 +419,12 @@
             });
             results.appendChild(option);
           });
-        }catch(e){ status.textContent = 'Employee search is unavailable right now.'; }
+        }catch(e){ status.textContent = 'การค้นหาพนักงานไม่สามารถใช้งานได้ในขณะนี้'; }
       }, 250);
     }
 
     async function startFlow(){
-      if(!state.empId){ set({error:'Please select your employee record from the search results.'}); return; }
+      if(!state.empId){ set({error:'กรุณาเลือกบันทึกพนักงานจากรายการค้นหา'}); return; }
       set({ screen:'checking' });
       // The server decides whether this ID is HR \u2014 nothing HR-specific lives in this file.
       try{
