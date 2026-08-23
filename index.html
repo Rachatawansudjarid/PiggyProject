@@ -157,12 +157,29 @@
   .wb-chart-subtitle{ color:var(--ink-soft); font-size:12.5px; margin:0 0 20px; }
   .wb-chart{ display:flex; align-items:flex-end; gap:14px; min-height:280px; padding:20px 8px 0; border-bottom:1px solid var(--line); background:repeating-linear-gradient(to top, transparent 0, transparent calc(25% - 1px), #E2E7DF calc(25% - 1px), #E2E7DF 25%); }
   .wb-chart-row{ display:flex; flex:1; min-width:72px; height:260px; flex-direction:column; align-items:center; justify-content:flex-end; gap:7px; }
+  .wb-chart-row{ cursor:pointer; }
+  .wb-chart-row:hover .wb-chart-bar{ background:var(--teal-deep); }
   .wb-chart-label{ order:3; width:100%; font-size:12px; color:var(--ink); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; text-align:center; }
   .wb-chart-track{ order:2; display:flex; align-items:flex-end; width:100%; height:210px; background:transparent; border-radius:5px 5px 0 0; overflow:hidden; }
   .wb-chart-bar{ width:100%; min-height:3px; background:var(--teal); border-radius:5px 5px 0 0; }
   .wb-chart-value{ order:1; font:12px 'IBM Plex Mono',monospace; color:var(--ink-soft); text-align:center; white-space:nowrap; }
   .wb-chart-empty{ color:var(--ink-soft); font-size:13px; }
   .wb-chart-scale{ display:flex; justify-content:space-between; color:var(--ink-soft); font:11px 'IBM Plex Mono',monospace; margin:5px 8px 0; }
+  .wb-hse-profile{ display:grid; grid-template-columns:220px 1fr; gap:24px; align-items:center; margin-top:14px; }
+  .wb-donut{ width:210px; height:210px; border-radius:50%; display:flex; align-items:center; justify-content:center; background:#E2E7DF; }
+  .wb-donut-hole{ width:112px; height:112px; border-radius:50%; background:#fff; display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; padding:10px; }
+  .wb-donut-hole strong{ font:600 20px 'Fraunces',serif; color:var(--teal-deep); }
+  .wb-donut-hole span{ color:var(--ink-soft); font-size:11px; line-height:1.3; }
+  .wb-hse-legend{ display:flex; flex-direction:column; gap:8px; }
+  .wb-hse-legend-row{ display:grid; grid-template-columns:12px 1fr auto; gap:8px; align-items:center; font-size:12.5px; }
+  .wb-hse-swatch{ width:10px; height:10px; border-radius:50%; }
+  .wb-hse-legend-score{ color:var(--ink-soft); font:11px 'IBM Plex Mono',monospace; }
+  .wb-hse-risk{ font-size:11px; color:var(--ink-soft); grid-column:2 / 4; margin-top:-5px; }
+  .wb-modal-note{ color:var(--ink-soft); font-size:12.5px; line-height:1.5; margin:14px 0 0; }
+  @media (max-width:640px){
+    .wb-hse-profile{ grid-template-columns:1fr; justify-items:center; }
+    .wb-hse-legend{ width:100%; }
+  }
   .wb-table-wrap{ background:var(--card); border:1px solid var(--line); border-radius:16px; overflow:hidden; box-shadow: var(--shadow); }
   table.wb-table{ width:100%; border-collapse:collapse; font-size:13.5px; }
   table.wb-table th{
@@ -667,6 +684,10 @@
         track.appendChild(bar);
         const value = el('div','wb-chart-value'); value.textContent = `${entry.average.toFixed(1)} (${entry.count})`;
         chartRow.appendChild(label); chartRow.appendChild(track); chartRow.appendChild(value); chart.appendChild(chartRow);
+        chartRow.setAttribute('role','button'); chartRow.tabIndex = 0;
+        chartRow.setAttribute('aria-label', `View HSE profile for ${entry.department}`);
+        chartRow.addEventListener('click', ()=> renderDepartmentModal(entry.department, data));
+        chartRow.addEventListener('keydown', event=>{ if(event.key === 'Enter' || event.key === ' ') { event.preventDefault(); renderDepartmentModal(entry.department, data); } });
       });
     }
     const chartScale = el('div','wb-chart-scale');
@@ -729,6 +750,66 @@
     const riskLevels = Object.values(record.hseRiskLevels || {});
     const needsAttention = riskLevels.some(level => level === 'Critical Risk' || level === 'High Risk');
     return `${average.toFixed(2)} / 5 · ${needsAttention ? 'Needs attention' : 'Stable'}`;
+  }
+
+  function renderDepartmentModal(department, records){
+    const departmentRecords = records.filter(record => (record.department || 'Department unavailable') === department && record.hseAnswers);
+    const bg = el('div','wb-modal-bg');
+    const modal = el('div','wb-modal');
+    const heading = el('h3'); heading.textContent = department;
+    const meta = el('div','meta'); meta.textContent = 'HSE workplace stress-risk profile';
+    modal.appendChild(heading); modal.appendChild(meta);
+
+    if(!departmentRecords.length){
+      const empty = el('div','wb-modal-note'); empty.textContent = 'No HSE responses are available for this department yet.';
+      modal.appendChild(empty);
+    } else {
+      const dimensionTotals = {};
+      departmentRecords.forEach(record=>{
+        const scores = record.hseScores || hseScores(record.hseAnswers);
+        Object.entries(scores).forEach(([dimension, score])=>{
+          if(!dimensionTotals[dimension]) dimensionTotals[dimension] = { total:0, count:0 };
+          dimensionTotals[dimension].total += Number(score);
+          dimensionTotals[dimension].count += 1;
+        });
+      });
+      const dimensions = Object.entries(dimensionTotals).map(([dimension, values])=>({ dimension, score:values.total / values.count }));
+      const totalScore = dimensions.reduce((sum, item)=>sum + item.score, 0);
+      const colors = ['#2F6F62','#C99A3B','#C1613F','#4D7C8A','#8A6F9E','#789262','#B37A52'];
+      let angle = 0;
+      const slices = dimensions.map((item, index)=>{
+        const start = angle;
+        angle += item.score / totalScore * 360;
+        return `${colors[index % colors.length]} ${start}deg ${angle}deg`;
+      });
+      const profile = el('div','wb-hse-profile');
+      const donut = el('div','wb-donut'); donut.style.background = `conic-gradient(${slices.join(',')})`;
+      const hole = el('div','wb-donut-hole');
+      const average = totalScore / dimensions.length;
+      const averageValue = document.createElement('strong'); averageValue.textContent = average.toFixed(2);
+      const averageLabel = document.createElement('span'); averageLabel.textContent = 'average HSE score / 5';
+      hole.appendChild(averageValue); hole.appendChild(averageLabel); donut.appendChild(hole);
+      profile.appendChild(donut);
+      const legend = el('div','wb-hse-legend');
+      dimensions.forEach((item, index)=>{
+        const percentage = item.score / totalScore * 100;
+        const legendRow = el('div','wb-hse-legend-row');
+        const swatch = el('span','wb-hse-swatch'); swatch.style.background = colors[index % colors.length];
+        const name = el('span'); name.textContent = item.dimension;
+        const score = el('span','wb-hse-legend-score'); score.textContent = `${item.score.toFixed(2)} · ${percentage.toFixed(1)}%`;
+        const risk = el('span','wb-hse-risk'); risk.textContent = hseRisk(item.score);
+        legendRow.appendChild(swatch); legendRow.appendChild(name); legendRow.appendChild(score); legendRow.appendChild(risk); legend.appendChild(legendRow);
+      });
+      profile.appendChild(legend); modal.appendChild(profile);
+      const note = el('div','wb-modal-note'); note.textContent = 'This profile highlights workplace stress-risk areas. It does not diagnose depression or prove that any dimension causes depression.';
+      modal.appendChild(note);
+    }
+
+    const close = el('button','wb-btn ghost wb-close'); close.textContent='Close';
+    close.addEventListener('click', ()=> set({ hrDetail:null }));
+    modal.appendChild(close); bg.appendChild(modal);
+    bg.addEventListener('click', event=>{ if(event.target===bg) bg.remove(); });
+    document.getElementById('wb-root').appendChild(bg);
   }
 
   function renderDetailModal(record){
