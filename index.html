@@ -248,7 +248,7 @@
     'ฉันได้รับมอบหมายกำหนดเวลาที่ไม่สามารถทำให้สำเร็จได้',
     'เมื่อการทำงานยากขึ้น เพื่อนร่วมงานจะช่วยเหลือฉัน',
     'ฉันได้รับคำแนะนำหรือข้อเสนอแนะที่ช่วยสนับสนุนการทำงานของฉัน',
-    'ฉันต้องทำงานอย่างเข้มข้นมาก',
+    'ฉันต้องทำงานอย่างหักโหมมาก',
     'ฉันมีส่วนร่วมในการกำหนดความเร็วในการทำงานของตนเอง',
     'ฉันเข้าใจหน้าที่และความรับผิดชอบของตนเองอย่างชัดเจน',
     'ฉันต้องละเลยงานบางอย่างเพราะมีงานมากเกินไป',
@@ -278,7 +278,7 @@
   ].map((question, index)=>({ id:`hse${index + 1}`, q:question, scale:index < 23 ? 'frequency' : 'agreement' }));
 
   const HSE_LABELS = {
-    frequency:['ไม่เคย','นาน ๆ ครั้ง','บางครั้ง','บ่อยครั้ง','เสมอ'],
+    frequency:['ไม่เคย','นาน ๆ ครั้ง','บางครั้ง','บ่อยครั้ง','สม่ำเสมอ'],
     agreement:['ไม่เห็นด้วยอย่างยิ่ง','ไม่เห็นด้วย','เป็นกลาง','เห็นด้วย','เห็นด้วยอย่างยิ่ง']
   };
   const HSE_DIMENSIONS = {
@@ -582,10 +582,10 @@
     card.appendChild(tableWrap);
 
     const row = el('div','wb-row');
-    const back = el('button','wb-btn ghost'); back.textContent = 'ย้อนกลับไป PSS-10';
+    const back = el('button','wb-btn ghost'); back.textContent = 'ย้อนกลับ';
     back.addEventListener('click', ()=> set({screen:'quiz'}));
     const complete = HSE_QUESTIONS.every(question => state.hseAnswers[question.id] !== undefined);
-    const submitButton = el('button','wb-btn'); submitButton.textContent = 'Submit'; submitButton.disabled = !complete;
+    const submitButton = el('button','wb-btn'); submitButton.textContent = 'ส่งคำตอบ'; submitButton.disabled = !complete;
     submitButton.addEventListener('click', async ()=>{
       const isComplete = HSE_QUESTIONS.every(question => state.hseAnswers[question.id] !== undefined);
       if(isComplete) await submit();
