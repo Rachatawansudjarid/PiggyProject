@@ -74,6 +74,14 @@
     background:#FBFCFA; color:var(--ink); outline:none; transition: border-color .15s;
   }
   .wb-input:focus{ border-color: var(--teal); }
+  .wb-search{ position:relative; }
+  .wb-results{ margin-top:8px; border:1px solid var(--line); border-radius:10px; overflow:hidden; background:#fff; }
+  .wb-result{ display:flex; flex-direction:column; align-items:flex-start; width:100%; padding:12px 14px; border:0; border-bottom:1px solid var(--line); background:#fff; color:var(--ink); text-align:left; cursor:pointer; }
+  .wb-result:last-child{ border-bottom:0; }
+  .wb-result:hover{ background:#EEF5F2; }
+  .wb-result .name{ font-size:14px; font-weight:600; }
+  .wb-result .id{ margin-top:3px; color:var(--ink-soft); font:12px 'IBM Plex Mono',monospace; }
+  .wb-search-status{ min-height:18px; margin-top:8px; color:var(--ink-soft); font-size:13px; }
   .wb-textarea{
     width:100%; min-height:90px; padding:14px 16px; border-radius:10px; border:1.5px solid var(--line);
     font-family:'Inter',sans-serif; font-size:14.5px; background:#FBFCFA; color:var(--ink);
@@ -192,6 +200,8 @@
   let state = {
     screen: 'entry',   // entry | checking | quiz | done | error | hr
     empId: '',
+    empName: '',
+    employeeMatches: [],
     step: 0,
     answers: {},
     error: '',
@@ -220,31 +230,64 @@
     const wrap = el('div');
     wrap.appendChild(eyebrow('Employee wellbeing check-in'));
     wrap.appendChild(h1('A few minutes, just for you.'));
-    wrap.appendChild(sub('Enter your employee ID to start a short, private check-in. Your responses go to HR to help support you.'));
+    wrap.appendChild(sub('Search your name or employee ID to start a short, private check-in. Your responses go to HR to help support you.'));
 
     const card = el('div','wb-card');
-    const label = el('label','wb-label'); label.textContent='Employee ID'; label.setAttribute('for','wb-id-input');
+    const label = el('label','wb-label'); label.textContent='Find your employee record'; label.setAttribute('for','wb-id-input');
+    const search = el('div','wb-search');
     const input = document.createElement('input');
-    input.className='wb-input'; input.id='wb-id-input'; input.placeholder='e.g. 4821093'; input.inputMode='numeric';
-    input.value = state.empId;
-    input.addEventListener('input', e=>{ state.empId = e.target.value.trim(); });
+    input.className='wb-input'; input.id='wb-id-input'; input.placeholder='Type your name or employee ID'; input.autocomplete='off';
+    input.value = state.empName || state.empId;
+    input.addEventListener('input', e=>{ searchEmployees(e.target.value); });
     input.addEventListener('keydown', e=>{ if(e.key==='Enter') startFlow(); });
 
     const err = el('div','wb-error'); err.textContent = state.error;
+    const status = el('div','wb-search-status');
+    const results = el('div','wb-results');
+    search.appendChild(input); search.appendChild(results); card.appendChild(label); card.appendChild(search); card.appendChild(status); card.appendChild(err);
 
     const row = el('div','wb-row');
     const spacer = el('div'); spacer.style.flex='1';
     const btn = el('button','wb-btn'); btn.textContent='Continue';
     btn.addEventListener('click', startFlow);
 
-    card.appendChild(label); card.appendChild(input); card.appendChild(err);
     row.appendChild(spacer); row.appendChild(btn); card.appendChild(row);
     wrap.appendChild(card);
     shell.appendChild(wrap);
     input.focus();
 
+    let searchTimer;
+    async function searchEmployees(value){
+      state.empId = ''; state.empName = ''; state.employeeMatches = [];
+      clearTimeout(searchTimer);
+      results.innerHTML = '';
+      const query = value.trim();
+      if(query.length < 2){ status.textContent = query ? 'Type at least 2 characters.' : ''; return; }
+      status.textContent = 'Searching...';
+      searchTimer = setTimeout(async ()=>{
+        try{
+          const res = await fetch(`/api/employees?q=${encodeURIComponent(query)}`);
+          if(!res.ok) throw new Error('employee search failed');
+          const data = await res.json();
+          state.employeeMatches = data.employees || [];
+          status.textContent = state.employeeMatches.length ? '' : 'No matching employee found.';
+          state.employeeMatches.forEach(employee=>{
+            const option = el('button','wb-result'); option.type='button';
+            const name = el('span','name'); name.textContent = employee.name;
+            const id = el('span','id'); id.textContent = employee.id;
+            option.appendChild(name); option.appendChild(id);
+            option.addEventListener('click', ()=>{
+              state.empId = employee.id; state.empName = employee.name;
+              input.value = employee.name; results.innerHTML = ''; status.textContent = `${employee.name} - ${employee.id}`;
+            });
+            results.appendChild(option);
+          });
+        }catch(e){ status.textContent = 'Employee search is unavailable right now.'; }
+      }, 250);
+    }
+
     async function startFlow(){
-      if(!state.empId){ set({error:'Please enter your employee ID.'}); return; }
+      if(!state.empId){ set({error:'Please select your employee record from the search results.'}); return; }
       set({ screen:'checking' });
       // The server decides whether this ID is HR \u2014 nothing HR-specific lives in this file.
       try{
@@ -320,7 +363,7 @@
     const row = el('div','wb-row');
     const back = el('button','wb-btn ghost'); back.textContent = state.step===0 ? 'Cancel' : 'Back';
     back.addEventListener('click', ()=>{
-      if(state.step===0){ set({screen:'entry', empId:'', error:''}); }
+      if(state.step===0){ set({screen:'entry', empId:'', empName:'', error:''}); }
       else { set({ step: state.step-1 }); }
     });
     const canNext = q.type==='text' || (state.answers[q.id] !== undefined && state.answers[q.id] !== '');
@@ -368,7 +411,7 @@
     note.textContent = 'If things feel difficult right now, you don\u2019t need to wait for a follow-up \u2014 you can reach out to your organization\u2019s Employee Assistance Program or a mental health professional at any time.';
     box.appendChild(icon); box.appendChild(h); box.appendChild(p); box.appendChild(note);
     const btn = el('button','wb-btn'); btn.style.marginTop='24px'; btn.textContent='Done';
-    btn.addEventListener('click', ()=> set({ screen:'entry', empId:'', answers:{}, step:0, error:'' }));
+    btn.addEventListener('click', ()=> set({ screen:'entry', empId:'', empName:'', answers:{}, step:0, error:'' }));
     box.appendChild(btn);
     card.appendChild(box);
     wrap.appendChild(card);
@@ -402,7 +445,7 @@
     wrap.appendChild(sub('All submitted wellbeing responses, most recent first.'));
 
     const backLink = el('div','wb-back'); backLink.textContent = '\u2190 Sign out';
-    backLink.addEventListener('click', ()=> { shell.classList.remove('wide'); set({ screen:'entry', empId:'', error:'' }); });
+    backLink.addEventListener('click', ()=> { shell.classList.remove('wide'); set({ screen:'entry', empId:'', empName:'', error:'' }); });
     wrap.appendChild(backLink);
 
     const data = state.hrData;

@@ -1,12 +1,19 @@
 # Wellbeing Check-in
 
-A simple internal tool: employees enter their ID and answer a short wellbeing
+A simple internal tool: employees search their name or ID and answer a short wellbeing
 check-in; HR enters a special ID and sees every response on a dashboard.
 
 - `index.html` \u2014 the whole frontend (static file, no build step)
 - `api/submit.js` \u2014 serverless function that saves a check-in
 - `api/responses.js` \u2014 serverless function that returns all check-ins, only if the ID matches `HR_EMPLOYEE_ID`
+- `api/employees.js` \u2014 serverless function that searches the employee workbook
 - `lib/redis.js` \u2014 tiny helper that talks to Upstash Redis over REST
+
+Put the employee workbook at `data/employees.xlsx` (or set
+`EMPLOYEE_DIRECTORY_FILE` to another relative path). The first row must include
+an employee ID column (`ID`, `Employee ID`, or similar) and a name column
+(`Name`, `Employee Name`, or similar). The search endpoint reads the workbook
+server-side and returns only matching ID/name pairs.
 
 Data is stored in **Upstash Redis**, which has a free tier and plugs straight
 into Vercel with zero extra setup.
@@ -14,11 +21,12 @@ into Vercel with zero extra setup.
 ## 1. Create the database
 
 **Easiest path \u2014 do it from inside Vercel:**
+
 1. Push this folder to a GitHub repo and import it into Vercel (New Project \u2192 pick the repo).
 2. In your new Vercel project, go to **Storage \u2192 Create Database \u2192 Upstash for Redis** (free tier).
 3. Vercel automatically adds `UPSTASH_REDIS_REST_URL` and `UPSTASH_REDIS_REST_TOKEN` to your project's environment variables. You don't need to copy/paste anything.
 
-*(Alternative: sign up directly at [upstash.com](https://upstash.com), create a free Redis database, and copy the REST URL and token from its dashboard into Vercel's Environment Variables settings yourself.)*
+_(Alternative: sign up directly at [upstash.com](https://upstash.com), create a free Redis database, and copy the REST URL and token from its dashboard into Vercel's Environment Variables settings yourself.)_
 
 ## 2. Set the HR ID
 
@@ -70,7 +78,7 @@ on `http://localhost:3000`.
 - There's still no employee login \u2014 anyone who knows another employee's ID
   could, in theory, submit on their behalf. If that matters for your
   rollout, add real authentication (e.g. SSO) in front of this.
-- Consider whether you need to log who *viewed* the HR dashboard, not just
+- Consider whether you need to log who _viewed_ the HR dashboard, not just
   who can access it \u2014 useful for audit trails with sensitive data.
 - Upstash's free tier has request limits; check their pricing page if you
   expect heavy usage.
