@@ -208,6 +208,59 @@
     { id:'pss10', q:'1 เดือนที่ผ่านมา คุณรู้สึกว่าความเครียดทำให้คุณต้องเผชิญกับความยากลำบากมากขึ้นหรือไม่?', type:'scale', labels:['ไม่เคย','ค่อนข้างไม่','บางครั้ง','ค่อนข้างบ่อย','บ่อยมาก'] }
   ];
 
+  const HSE_QUESTIONS = [
+    'ฉันเข้าใจอย่างชัดเจนว่าที่ทำงานคาดหวังอะไรจากฉัน',
+    'ฉันสามารถตัดสินใจได้ว่าจะพักเมื่อใด',
+    'คนจากหลายกลุ่มในที่ทำงานเรียกร้องสิ่งต่าง ๆ จากฉันจนยากที่จะจัดการให้สอดคล้องกัน',
+    'ฉันรู้ว่าควรดำเนินการอย่างไรเพื่อทำงานให้สำเร็จ',
+    'ฉันถูกคุกคามหรือรบกวนเป็นการส่วนตัวด้วยคำพูดหรือพฤติกรรมที่ไม่ดี',
+    'ฉันได้รับมอบหมายกำหนดเวลาที่ไม่สามารถทำให้สำเร็จได้',
+    'เมื่อการทำงานยากขึ้น เพื่อนร่วมงานจะช่วยเหลือฉัน',
+    'ฉันได้รับคำแนะนำหรือข้อเสนอแนะที่ช่วยสนับสนุนการทำงานของฉัน',
+    'ฉันต้องทำงานอย่างเข้มข้นมาก',
+    'ฉันมีส่วนร่วมในการกำหนดความเร็วในการทำงานของตนเอง',
+    'ฉันเข้าใจหน้าที่และความรับผิดชอบของตนเองอย่างชัดเจน',
+    'ฉันต้องละเลยงานบางอย่างเพราะมีงานมากเกินไป',
+    'ฉันเข้าใจเป้าหมายและวัตถุประสงค์ของแผนกอย่างชัดเจน',
+    'มีความขัดแย้งหรือความโกรธระหว่างเพื่อนร่วมงาน',
+    'ฉันมีทางเลือกในการตัดสินใจว่าจะทำงานอย่างไร',
+    'ฉันไม่สามารถหยุดพักได้อย่างเพียงพอ',
+    'ฉันเข้าใจว่างานของฉันสอดคล้องกับเป้าหมายโดยรวมขององค์กรอย่างไร',
+    'ฉันถูกกดดันให้ทำงานเป็นเวลานาน',
+    'ฉันมีทางเลือกในการตัดสินใจว่าจะทำงานอะไรบ้าง',
+    'ฉันต้องทำงานอย่างรวดเร็วมาก',
+    'ฉันถูกกลั่นแกล้งในที่ทำงาน',
+    'ฉันต้องทำงานภายใต้แรงกดดันด้านเวลาที่ไม่สมเหตุสมผล',
+    'ฉันสามารถพึ่งพาผู้จัดการโดยตรงให้ช่วยแก้ไขปัญหาในการทำงานได้',
+    'ฉันได้รับความช่วยเหลือและการสนับสนุนที่จำเป็นจากเพื่อนร่วมงาน',
+    'ฉันมีส่วนในการตัดสินใจเกี่ยวกับวิธีการทำงานของตนเอง',
+    'ฉันมีโอกาสเพียงพอที่จะสอบถามผู้จัดการเกี่ยวกับการเปลี่ยนแปลงในที่ทำงาน',
+    'ฉันได้รับความเคารพจากเพื่อนร่วมงานอย่างที่ควรได้รับ',
+    'พนักงานได้รับการปรึกษาหารือเกี่ยวกับการเปลี่ยนแปลงในที่ทำงานเสมอ',
+    'ฉันสามารถพูดคุยกับผู้จัดการโดยตรงเกี่ยวกับเรื่องงานที่ทำให้ฉันไม่สบายใจหรือรำคาญได้',
+    'เวลาทำงานของฉันสามารถยืดหยุ่นได้',
+    'เพื่อนร่วมงานพร้อมรับฟังปัญหาที่เกี่ยวข้องกับงานของฉัน',
+    'เมื่อมีการเปลี่ยนแปลงในที่ทำงาน ฉันเข้าใจอย่างชัดเจนว่าจะนำไปปฏิบัติอย่างไร',
+    'ฉันได้รับการสนับสนุนเมื่อต้องทำงานที่มีภาระทางอารมณ์สูง',
+    'ความสัมพันธ์ในที่ทำงานตึงเครียด',
+    'ผู้จัดการโดยตรงของฉันให้กำลังใจในการทำงาน'
+  ].map((question, index)=>({ id:`hse${index + 1}`, q:question, scale:index < 23 ? 'frequency' : 'agreement' }));
+
+  const HSE_LABELS = {
+    frequency:['ไม่เคย','นาน ๆ ครั้ง','บางครั้ง','บ่อยครั้ง','เสมอ'],
+    agreement:['ไม่เห็นด้วยอย่างยิ่ง','ไม่เห็นด้วย','เป็นกลาง','เห็นด้วย','เห็นด้วยอย่างยิ่ง']
+  };
+  const HSE_DIMENSIONS = {
+    Demands:[3,6,9,12,16,18,20,22],
+    Control:[2,10,15,19,25,30],
+    "Managers' Support":[8,23,29,35],
+    'Peer Support':[4,11,27,31],
+    Relationships:[5,14,21,28,33],
+    Role:[1,7,13,17,24],
+    Change:[26,32,34]
+  };
+  const HSE_REVERSE = new Set([16,25,28,33]);
+
   let state = {
     screen: 'entry',   // entry | checking | quiz | done | error | hr
     empId: '',
@@ -215,6 +268,7 @@
     employeeMatches: [],
     step: 0,
     answers: {},
+    hseAnswers: {},
     error: '',
     hrData: [],
     hrDetail: null
@@ -250,6 +304,25 @@
     if(score <= 13) return 'Low stress';
     if(score <= 26) return 'Moderate stress';
     return 'High stress';
+  }
+
+  function hseScores(answers){
+    const scores = {};
+    Object.entries(HSE_DIMENSIONS).forEach(([dimension, questionNumbers])=>{
+      const values = questionNumbers.map(number=>{
+        const value = Number(answers && answers[`hse${number}`]);
+        return HSE_REVERSE.has(number) ? 6 - value : value;
+      }).filter(Number.isFinite);
+      scores[dimension] = values.length ? values.reduce((sum, value)=>sum + value, 0) / values.length : 0;
+    });
+    return scores;
+  }
+
+  function hseRisk(score){
+    if(score >= 4) return 'Low Risk';
+    if(score >= 3.5) return 'Moderate Risk';
+    if(score >= 3) return 'High Risk';
+    return 'Critical Risk';
   }
 
   // ---------- ENTRY SCREEN ----------
@@ -390,7 +463,7 @@
     const next = el('button','wb-btn'); next.textContent = 'Submit'; next.disabled = !canSubmit;
     next.addEventListener('click', async ()=>{
       const complete = QUESTIONS.every(question => state.answers[question.id] !== undefined && state.answers[question.id] !== '');
-      if(complete) await submit();
+      if(complete) set({ screen:'hse', hseAnswers:{} });
     });
     row.appendChild(back); row.appendChild(next);
     card.appendChild(row);
@@ -399,12 +472,74 @@
     shell.appendChild(wrap);
   }
 
+  function screenHse(){
+    const wrap = el('div');
+    wrap.appendChild(eyebrow('แบบประเมินมาตรฐาน HSE · ' + state.empId));
+    wrap.appendChild(h1('แบบประเมินสภาพการทำงาน'));
+    wrap.appendChild(sub('โปรดตอบคำถามโดยพิจารณาจากการทำงานของคุณในช่วง 6 เดือนที่ผ่านมา'));
+
+    const card = el('div','wb-card');
+    const qnum = el('div','wb-qnum'); qnum.textContent = 'ตอบคำถามให้ครบทั้ง 35 ข้อ';
+    const qtext = el('div','wb-q'); qtext.textContent = 'เลือกคำตอบหนึ่งรายการสำหรับแต่ละข้อความ';
+    card.appendChild(qnum); card.appendChild(qtext);
+
+    const tableWrap = el('div','wb-question-table-wrap');
+    function appendHseTable(questions, labels){
+      const table = document.createElement('table'); table.className='wb-question-table';
+      const thead = document.createElement('thead');
+      const headerRow = document.createElement('tr');
+      const questionHeader = document.createElement('th'); questionHeader.textContent = 'ข้อความ'; headerRow.appendChild(questionHeader);
+      labels.forEach(labelText=>{
+        const th = document.createElement('th'); th.textContent = labelText; headerRow.appendChild(th);
+      });
+      thead.appendChild(headerRow); table.appendChild(thead);
+      const tbody = document.createElement('tbody');
+      questions.forEach(question=>{
+        const row = document.createElement('tr');
+        const questionCell = document.createElement('td');
+        questionCell.textContent = `${Number(question.id.slice(3))}. ${question.q}`;
+        row.appendChild(questionCell);
+        labels.forEach((labelText, value)=>{
+          const cell = document.createElement('td');
+          const label = el('label','wb-choice-label');
+          const input = document.createElement('input');
+          input.className='wb-choice'; input.type='radio'; input.name=question.id;
+          input.value = value + 1; input.checked = Number(state.hseAnswers[question.id]) === value + 1;
+          input.setAttribute('aria-label', `${question.q}: ${labelText}`);
+          input.addEventListener('change', ()=>{
+            state.hseAnswers[question.id] = value + 1;
+            submitButton.disabled = !HSE_QUESTIONS.every(item => state.hseAnswers[item.id] !== undefined);
+          });
+          label.appendChild(input); cell.appendChild(label); row.appendChild(cell);
+        });
+        tbody.appendChild(row);
+      });
+      table.appendChild(tbody); tableWrap.appendChild(table);
+    }
+    appendHseTable(HSE_QUESTIONS.slice(0,23), HSE_LABELS.frequency);
+    const agreementNote = el('div','wb-qnum'); agreementNote.textContent = 'ข้อ 24–35: โปรดใช้ระดับความคิดเห็น'; agreementNote.style.marginTop='24px'; tableWrap.appendChild(agreementNote);
+    appendHseTable(HSE_QUESTIONS.slice(23), HSE_LABELS.agreement);
+    card.appendChild(tableWrap);
+
+    const row = el('div','wb-row');
+    const back = el('button','wb-btn ghost'); back.textContent = 'ย้อนกลับไป PSS-10';
+    back.addEventListener('click', ()=> set({screen:'quiz'}));
+    const complete = HSE_QUESTIONS.every(question => state.hseAnswers[question.id] !== undefined);
+    const submitButton = el('button','wb-btn'); submitButton.textContent = 'Submit'; submitButton.disabled = !complete;
+    submitButton.addEventListener('click', async ()=>{
+      const isComplete = HSE_QUESTIONS.every(question => state.hseAnswers[question.id] !== undefined);
+      if(isComplete) await submit();
+    });
+    row.appendChild(back); row.appendChild(submitButton); card.appendChild(row);
+    wrap.appendChild(card); shell.appendChild(wrap);
+  }
+
   async function submit(){
     try{
       const res = await fetch('/api/submit', {
         method:'POST',
         headers:{ 'Content-Type':'application/json' },
-        body: JSON.stringify({ employeeId: state.empId, answers: state.answers })
+        body: JSON.stringify({ employeeId: state.empId, answers: state.answers, hseAnswers: state.hseAnswers })
       });
       if(!res.ok) throw new Error('submit failed: ' + res.status);
       set({ screen:'done' });
@@ -428,6 +563,16 @@
     const note = el('div','wb-note');
     note.textContent = `Your PSS-10 score is ${score} / 40 — ${pssBand(score)}. ${score >= 27 ? 'It is recommended to practice relaxation techniques or consult a professional.' : ''}`;
     box.appendChild(icon); box.appendChild(h); box.appendChild(p); box.appendChild(note);
+    const hseTitle = el('div','wb-qnum'); hseTitle.textContent = 'HSE evaluation'; hseTitle.style.marginTop='24px'; hseTitle.style.textAlign='left';
+    box.appendChild(hseTitle);
+    const hseTable = document.createElement('table'); hseTable.className='wb-table'; hseTable.style.textAlign='left';
+    const hseScoresResult = hseScores(state.hseAnswers || {});
+    Object.entries(hseScoresResult).forEach(([dimension, value])=>{
+      const row = document.createElement('tr');
+      row.innerHTML = `<td>${escapeHtml(dimension)}</td><td>${value.toFixed(2)} / 5</td><td>${hseRisk(value)}</td>`;
+      hseTable.appendChild(row);
+    });
+    box.appendChild(hseTable);
     const btn = el('button','wb-btn'); btn.style.marginTop='24px'; btn.textContent='Done';
     btn.addEventListener('click', ()=> set({ screen:'entry', empId:'', empName:'', answers:{}, step:0, error:'' }));
     box.appendChild(btn);
@@ -593,6 +738,7 @@
     entry: screenEntry,
     checking: screenChecking,
     quiz: screenQuiz,
+    hse: screenHse,
     done: screenDone,
     error: screenError,
     hr: screenHr
