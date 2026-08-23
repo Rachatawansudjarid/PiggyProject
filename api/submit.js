@@ -1,7 +1,7 @@
 const { redis } = require('../lib/redis');
 
 // Only these fields are ever stored, no matter what the client sends.
-const QUESTION_IDS = ['mood', 'stress', 'sleep', 'workload', 'support', 'balance', 'notes', 'followup'];
+const QUESTION_IDS = ['pss1', 'pss2', 'pss3', 'pss4', 'pss5', 'pss6', 'pss7', 'pss8', 'pss9', 'pss10'];
 
 module.exports = async function handler(req, res) {
   if (req.method !== 'POST') {
@@ -21,10 +21,18 @@ module.exports = async function handler(req, res) {
       return;
     }
 
+    const reverseKeys = new Set(['pss4', 'pss5', 'pss7', 'pss8']);
     const cleanAnswers = {};
+    let totalScore = 0;
     for (const id of QUESTION_IDS) {
-      if (answers[id] !== undefined && answers[id] !== null && answers[id] !== '') {
-        cleanAnswers[id] = answers[id];
+      const raw = answers[id];
+      if (raw !== undefined && raw !== null && raw !== '') {
+        const value = Number(raw);
+        if (Number.isFinite(value)) {
+          const normalized = reverseKeys.has(id) ? (4 - value) : value;
+          cleanAnswers[id] = value;
+          totalScore += normalized;
+        }
       }
     }
 
@@ -32,7 +40,8 @@ module.exports = async function handler(req, res) {
     const record = {
       employeeId: cleanId,
       submittedAt: new Date().toISOString(),
-      answers: cleanAnswers
+      answers: cleanAnswers,
+      pssScore: totalScore
     };
 
     // A colon-delimited key with a timestamp keeps a full history per employee.

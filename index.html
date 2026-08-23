@@ -181,20 +181,16 @@
   const shell = document.getElementById('wb-shell');
 
   const QUESTIONS = [
-    { id:'mood', q:'How would you describe your overall mood this week?',
-      type:'scale', labels:['Very low','Low','Okay','Good','Very good'] },
-    { id:'stress', q:'How manageable has your stress level felt lately?',
-      type:'scale', labels:['Overwhelming','Difficult','Manageable','Mostly fine','Very manageable'] },
-    { id:'sleep', q:'How would you rate your sleep quality recently?',
-      type:'scale', labels:['Very poor','Poor','Okay','Good','Very good'] },
-    { id:'workload', q:'How manageable is your current workload?',
-      type:'scale', labels:['Unmanageable','Heavy','Okay','Manageable','Very manageable'] },
-    { id:'support', q:'How supported do you feel by your team or manager?',
-      type:'scale', labels:['Not at all','A little','Somewhat','Mostly','Very supported'] },
-    { id:'balance', q:'How satisfied are you with your work-life balance?',
-      type:'scale', labels:['Not satisfied','Slightly','Neutral','Satisfied','Very satisfied'] },
-    { id:'notes', q:'Anything you\u2019d like HR to know? (optional)', type:'text' },
-    { id:'followup', q:'Would you like someone from HR to reach out to you directly?', type:'yesno' }
+    { id:'pss1', q:'ในสัปดาห์ที่ผ่านมา คุณรู้สึกว่ามีสิ่งที่ต้องจัดการมากจนไม่สามารถควบคุมได้หรือไม่?', type:'scale', labels:['ไม่เคย','ค่อนข้างไม่','บางครั้ง','ค่อนข้างบ่อย','บ่อยมาก'] },
+    { id:'pss2', q:'ในสัปดาห์ที่ผ่านมา คุณรู้สึกว่าคุณกังวลเกี่ยวกับสิ่งที่จะเกิดขึ้นในอนาคตหรือไม่?', type:'scale', labels:['ไม่เคย','ค่อนข้างไม่','บางครั้ง','ค่อนข้างบ่อย','บ่อยมาก'] },
+    { id:'pss3', q:'ในสัปดาห์ที่ผ่านมา คุณรู้สึกว่าความเครียดมีมากจนคุณไม่สามารถจัดการได้หรือไม่?', type:'scale', labels:['ไม่เคย','ค่อนข้างไม่','บางครั้ง','ค่อนข้างบ่อย','บ่อยมาก'] },
+    { id:'pss4', q:'ในสัปดาห์ที่ผ่านมา คุณสามารถควบคุมสิ่งที่เกิดขึ้นในชีวิตของคุณได้หรือไม่?', type:'scale', labels:['ไม่เคย','ค่อนข้างไม่','บางครั้ง','ค่อนข้างบ่อย','บ่อยมาก'] },
+    { id:'pss5', q:'ในสัปดาห์ที่ผ่านมา คุณรู้สึกว่าความเครียดเพิ่มขึ้นเรื่อย ๆ จนทำให้สิ่งต่าง ๆ ที่ต้องทำดูหนักมากหรือไม่?', type:'scale', labels:['ไม่เคย','ค่อนข้างไม่','บางครั้ง','ค่อนข้างบ่อย','บ่อยมาก'] },
+    { id:'pss6', q:'ในสัปดาห์ที่ผ่านมา คุณรู้สึกว่าคุณมีความสามารถควบคุมความกังวลและความเครียดของตนเองได้หรือไม่?', type:'scale', labels:['ไม่เคย','ค่อนข้างไม่','บางครั้ง','ค่อนข้างบ่อย','บ่อยมาก'] },
+    { id:'pss7', q:'ในสัปดาห์ที่ผ่านมา คุณรู้สึกว่าคุณมีปัญหาหรือความยากลำบากในการจัดการงานหรือเรื่องที่ต้องทำหรือไม่?', type:'scale', labels:['ไม่เคย','ค่อนข้างไม่','บางครั้ง','ค่อนข้างบ่อย','บ่อยมาก'] },
+    { id:'pss8', q:'ในสัปดาห์ที่ผ่านมา คุณรู้สึกว่าคุณสามารถจัดการกับความกังวลต่าง ๆ ได้ดีหรือไม่?', type:'scale', labels:['ไม่เคย','ค่อนข้างไม่','บางครั้ง','ค่อนข้างบ่อย','บ่อยมาก'] },
+    { id:'pss9', q:'ในสัปดาห์ที่ผ่านมา คุณรู้สึกว่าความเครียดทำให้คุณหงุดหงิดหรือโกรธมากขึ้นหรือไม่?', type:'scale', labels:['ไม่เคย','ค่อนข้างไม่','บางครั้ง','ค่อนข้างบ่อย','บ่อยมาก'] },
+    { id:'pss10', q:'ในสัปดาห์ที่ผ่านมา คุณรู้สึกว่าความเครียดทำให้คุณต้องเผชิญกับความยากลำบากมากขึ้นหรือไม่?', type:'scale', labels:['ไม่เคย','ค่อนข้างไม่','บางครั้ง','ค่อนข้างบ่อย','บ่อยมาก'] }
   ];
 
   let state = {
@@ -218,11 +214,27 @@
   }
   function set(patch){ Object.assign(state, patch); render(); }
 
-  function scaleAvg(a){
-    const keys = ['mood','stress','sleep','workload','support','balance'];
-    const vals = keys.map(k=>a[k]).filter(v=>typeof v === 'number');
-    if(!vals.length) return null;
-    return vals.reduce((s,v)=>s+v,0)/vals.length;
+  function reversePssScore(value){
+    return 4 - value;
+  }
+
+  function pssScore(answers){
+    const reverseKeys = new Set(['pss4','pss5','pss7','pss8']);
+    const keys = ['pss1','pss2','pss3','pss4','pss5','pss6','pss7','pss8','pss9','pss10'];
+    let total = 0;
+    keys.forEach((key)=>{
+      const value = Number(answers && answers[key]);
+      if(Number.isFinite(value)){
+        total += reverseKeys.has(key) ? reversePssScore(value) : value;
+      }
+    });
+    return total;
+  }
+
+  function pssBand(score){
+    if(score <= 13) return 'Low stress';
+    if(score <= 26) return 'Moderate stress';
+    return 'High stress';
   }
 
   // ---------- ENTRY SCREEN ----------
@@ -333,8 +345,8 @@
     if(q.type === 'scale'){
       const box = el('div','wb-scale');
       q.labels.forEach((lab,i)=>{
-        const val = i+1;
-        const opt = el('div','wb-opt' + (state.answers[q.id]===val?' sel':''));
+        const val = i;
+        const opt = el('div','wb-opt' + (Number(state.answers[q.id])===val?' sel':''));
         const n = el('div','n'); n.textContent = val;
         const t = el('div','t'); t.textContent = lab;
         opt.appendChild(n); opt.appendChild(t);
@@ -407,8 +419,9 @@
     const h = el('div','wb-q'); h.style.marginBottom='6px'; h.textContent = 'Thank you.';
     const p = el('div'); p.style.cssText='color:var(--ink-soft);font-size:14.5px;line-height:1.6;';
     p.textContent = 'Your responses have been sent to HR. If you asked for a follow-up, someone will reach out to you soon.';
+    const score = pssScore(state.answers || {});
     const note = el('div','wb-note');
-    note.textContent = 'If things feel difficult right now, you don\u2019t need to wait for a follow-up \u2014 you can reach out to your organization\u2019s Employee Assistance Program or a mental health professional at any time.';
+    note.textContent = `Your PSS-10 score is ${score} / 40 — ${pssBand(score)}. ${score >= 27 ? 'It is recommended to practice relaxation techniques or consult a professional.' : ''}`;
     box.appendChild(icon); box.appendChild(h); box.appendChild(p); box.appendChild(note);
     const btn = el('button','wb-btn'); btn.style.marginTop='24px'; btn.textContent='Done';
     btn.addEventListener('click', ()=> set({ screen:'entry', empId:'', empName:'', answers:{}, step:0, error:'' }));
@@ -452,11 +465,13 @@
     const total = data.length;
     const flagged = data.filter(r => needsFollowup(r)).length;
     const uniqueEmployees = new Set(data.map(r=>r.employeeId)).size;
+    const avgPss = data.length ? (data.reduce((sum, r) => sum + (r.pssScore !== undefined ? r.pssScore : pssScore(r.answers || {})), 0) / data.length).toFixed(1) : '0.0';
 
     const stats = el('div','wb-stats');
     stats.appendChild(statBox(total, 'Total check-ins'));
     stats.appendChild(statBox(uniqueEmployees, 'Employees'));
     stats.appendChild(statBox(flagged, 'Flagged for follow-up'));
+    stats.appendChild(statBox(avgPss, 'Avg. PSS-10'));
     wrap.appendChild(stats);
 
     if(!total){
@@ -467,16 +482,16 @@
       const tableWrap = el('div','wb-table-wrap');
       const table = document.createElement('table'); table.className='wb-table';
       const thead = document.createElement('thead');
-      thead.innerHTML = '<tr><th>Employee ID</th><th>Submitted</th><th>Avg. wellbeing</th><th>Status</th></tr>';
+      thead.innerHTML = '<tr><th>Employee ID</th><th>Submitted</th><th>PSS-10</th><th>Status</th></tr>';
       const tbody = document.createElement('tbody');
       data.forEach((r)=>{
         const tr = document.createElement('tr'); tr.className='clickable';
-        const avg = scaleAvg(r.answers);
+        const score = r.pssScore !== undefined ? r.pssScore : pssScore(r.answers || {});
         const flag = needsFollowup(r);
         tr.innerHTML = `
           <td style="font-family:'IBM Plex Mono',monospace;">${escapeHtml(r.employeeId)}</td>
           <td>${formatDate(r.submittedAt)}</td>
-          <td>${avg!==null ? avg.toFixed(1)+' / 5' : '\u2014'}</td>
+          <td>${score !== null ? score + ' / 40' : '\u2014'}</td>
           <td></td>
         `;
         const statusTd = tr.children[3];
@@ -500,8 +515,8 @@
 
   function needsFollowup(r){
     if(r.answers && r.answers.followup === 'Yes') return true;
-    const avg = scaleAvg(r.answers);
-    return avg !== null && avg <= 2.3;
+    const score = r.pssScore !== undefined ? r.pssScore : pssScore(r.answers || {});
+    return score >= 27;
   }
 
   function renderDetailModal(record){
@@ -509,7 +524,9 @@
     const modal = el('div','wb-modal');
     const h = el('h3'); h.textContent = 'Employee ' + record.employeeId;
     const meta = el('div','meta'); meta.textContent = formatDate(record.submittedAt);
-    modal.appendChild(h); modal.appendChild(meta);
+    const score = record.pssScore !== undefined ? record.pssScore : pssScore(record.answers || {});
+    const band = el('div','wb-note'); band.textContent = `PSS-10 score: ${score} / 40 — ${pssBand(score)}`;
+    modal.appendChild(h); modal.appendChild(meta); modal.appendChild(band);
 
     QUESTIONS.forEach(q=>{
       const val = record.answers[q.id];
@@ -517,7 +534,8 @@
       const qEl = el('div','q'); qEl.textContent = q.q;
       const aEl = el('div','a');
       if(q.type==='scale'){
-        aEl.textContent = val ? `${val} / 5 \u2014 ${q.labels[val-1]}` : 'No answer';
+        const numeric = Number(val);
+        aEl.textContent = Number.isFinite(numeric) ? `${numeric} / 4 — ${q.labels[numeric]}` : 'No answer';
       } else if(!val){
         aEl.textContent = '\u2014';
         aEl.style.color = 'var(--ink-soft)';
