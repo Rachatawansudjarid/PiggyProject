@@ -27,6 +27,7 @@ async function loadEmployees() {
     const idColumn = findColumn(headers, ['id', 'employeeid', 'employeenumber', 'staffid', 'staffnumber']);
     const firstNameColumn = findColumn(headers, ['name', 'employeename', 'fullname', 'staffname', 'firstname']);
     const lastNameColumn = findColumn(headers, ['lastname', 'surname', 'familyname']);
+    const departmentColumn = headers.length > 5 ? 5 : -1;
     const resolvedIdColumn = idColumn >= 0 ? idColumn : 0;
     const resolvedNameColumn = firstNameColumn >= 0 ? firstNameColumn : 1;
     if (resolvedIdColumn >= headers.length || resolvedNameColumn >= headers.length) return;
@@ -41,7 +42,8 @@ async function loadEmployees() {
           ? String(row.getCell(3).text || '').trim()
           : '';
       const name = `${firstName} ${lastName}`.trim();
-      if (id && name) employees.push({ id, name });
+      const department = departmentColumn >= 0 ? String(row.getCell(departmentColumn + 1).text || '').trim() : '';
+      if (id && name) employees.push({ id, name, department });
     });
   });
   return employees;

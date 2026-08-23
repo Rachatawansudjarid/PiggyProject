@@ -152,6 +152,16 @@
   .wb-stat{ flex:1; min-width:130px; background:var(--card); border:1px solid var(--line); border-radius:14px; padding:18px 20px; }
   .wb-stat .v{ font-family:'Fraunces',serif; font-size:28px; font-weight:600; color:var(--teal-deep); }
   .wb-stat .l{ font-size:12px; color:var(--ink-soft); margin-top:4px; }
+  .wb-chart-card{ background:var(--card); border:1px solid var(--line); border-radius:16px; padding:22px; margin-bottom:22px; box-shadow:var(--shadow); }
+  .wb-chart-title{ font-family:'Fraunces',serif; font-size:20px; color:var(--teal-deep); margin:0 0 4px; }
+  .wb-chart-subtitle{ color:var(--ink-soft); font-size:12.5px; margin:0 0 20px; }
+  .wb-chart{ display:flex; flex-direction:column; gap:12px; }
+  .wb-chart-row{ display:grid; grid-template-columns:minmax(120px, 180px) 1fr 58px; align-items:center; gap:10px; }
+  .wb-chart-label{ font-size:13px; color:var(--ink); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .wb-chart-track{ height:22px; background:#EEF2ED; border-radius:5px; overflow:hidden; }
+  .wb-chart-bar{ height:100%; min-width:3px; background:var(--teal); border-radius:5px; }
+  .wb-chart-value{ font:12px 'IBM Plex Mono',monospace; color:var(--ink-soft); text-align:right; }
+  .wb-chart-empty{ color:var(--ink-soft); font-size:13px; }
   .wb-table-wrap{ background:var(--card); border:1px solid var(--line); border-radius:16px; overflow:hidden; box-shadow: var(--shadow); }
   table.wb-table{ width:100%; border-collapse:collapse; font-size:13.5px; }
   table.wb-table th{
@@ -183,6 +193,7 @@
     .wb-card{ padding:22px 16px; }
     table.wb-question-table{ min-width:700px; }
     table.wb-question-table th:first-child{ width:38%; }
+    .wb-chart-row{ grid-template-columns:100px 1fr 52px; gap:7px; }
   }
 </style>
 </head>
@@ -265,6 +276,7 @@
     screen: 'entry',   // entry | checking | quiz | done | error | hr
     empId: '',
     empName: '',
+    department: '',
     employeeMatches: [],
     step: 0,
     answers: {},
@@ -377,7 +389,7 @@
             const id = el('span','id'); id.textContent = employee.id;
             option.appendChild(name); option.appendChild(id);
             option.addEventListener('click', ()=>{
-              state.empId = employee.id; state.empName = employee.name;
+              state.empId = employee.id; state.empName = employee.name; state.department = employee.department || '';
               input.value = employee.name; results.innerHTML = ''; status.textContent = `${employee.name} - ${employee.id}`;
             });
             results.appendChild(option);
@@ -539,7 +551,7 @@
       const res = await fetch('/api/submit', {
         method:'POST',
         headers:{ 'Content-Type':'application/json' },
-        body: JSON.stringify({ employeeId: state.empId, answers: state.answers, hseAnswers: state.hseAnswers })
+        body: JSON.stringify({ employeeId: state.empId, department: state.department, answers: state.answers, hseAnswers: state.hseAnswers })
       });
       if(!res.ok) throw new Error('submit failed: ' + res.status);
       set({ screen:'done' });
@@ -624,6 +636,38 @@
     stats.appendChild(statBox(avgPss, 'Avg. PSS-10'));
     wrap.appendChild(stats);
 
+    const chartCard = el('div','wb-chart-card');
+    const chartTitle = el('h2','wb-chart-title'); chartTitle.textContent = 'PSS-10 by department';
+    const chartSubtitle = el('p','wb-chart-subtitle'); chartSubtitle.textContent = 'Average stress score by department · higher scores indicate higher stress';
+    const chart = el('div','wb-chart');
+    const departmentScores = {};
+    data.forEach(record=>{
+      const department = record.department || 'Department unavailable';
+      const score = record.pssScore !== undefined ? Number(record.pssScore) : pssScore(record.answers || {});
+      if(!Number.isFinite(score)) return;
+      if(!departmentScores[department]) departmentScores[department] = { total:0, count:0 };
+      departmentScores[department].total += score;
+      departmentScores[department].count += 1;
+    });
+    const chartEntries = Object.entries(departmentScores)
+      .map(([department, values])=>({ department, average:values.total / values.count, count:values.count }))
+      .sort((a,b)=>b.average - a.average);
+    if(!chartEntries.length){
+      const emptyChart = el('div','wb-chart-empty'); emptyChart.textContent = 'No department data available yet.';
+      chart.appendChild(emptyChart);
+    } else {
+      chartEntries.forEach(entry=>{
+        const chartRow = el('div','wb-chart-row');
+        const label = el('div','wb-chart-label'); label.textContent = entry.department; label.title = entry.department;
+        const track = el('div','wb-chart-track');
+        const bar = el('div','wb-chart-bar'); bar.style.width = `${Math.min(100, Math.max(0, entry.average / 40 * 100))}%`;
+        track.appendChild(bar);
+        const value = el('div','wb-chart-value'); value.textContent = `${entry.average.toFixed(1)} (${entry.count})`;
+        chartRow.appendChild(label); chartRow.appendChild(track); chartRow.appendChild(value); chart.appendChild(chartRow);
+      });
+    }
+    chartCard.appendChild(chartTitle); chartCard.appendChild(chartSubtitle); chartCard.appendChild(chart); wrap.appendChild(chartCard);
+
     if(!total){
       const card = el('div','wb-table-wrap');
       const p = el('div','wb-empty'); p.textContent = 'No check-ins submitted yet.';
@@ -703,24 +747,6 @@
       });
       modal.appendChild(hseTable);
     }
-
-    QUESTIONS.forEach(q=>{
-      const val = record.answers[q.id];
-      const row = el('div','wb-ans');
-      const qEl = el('div','q'); qEl.textContent = q.q;
-      const aEl = el('div','a');
-      if(q.type==='scale'){
-        const numeric = Number(val);
-        aEl.textContent = Number.isFinite(numeric) ? `${numeric} / 4 — ${q.labels[numeric]}` : 'No answer';
-      } else if(!val){
-        aEl.textContent = '\u2014';
-        aEl.style.color = 'var(--ink-soft)';
-      } else {
-        aEl.textContent = val;
-      }
-      row.appendChild(qEl); row.appendChild(aEl);
-      modal.appendChild(row);
-    });
 
     const close = el('button','wb-btn ghost wb-close'); close.textContent='Close';
     close.addEventListener('click', ()=> set({ hrDetail:null }));

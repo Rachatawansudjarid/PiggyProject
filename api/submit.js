@@ -40,7 +40,7 @@ module.exports = async function handler(req, res) {
   }
 
   try {
-    const { employeeId, answers, hseAnswers } = req.body || {};
+    const { employeeId, department, answers, hseAnswers } = req.body || {};
 
     if (!employeeId || typeof employeeId !== 'string' || !employeeId.trim()) {
       res.status(400).json({ error: 'employeeId is required' });
@@ -83,8 +83,10 @@ module.exports = async function handler(req, res) {
     const hseRiskLevels = Object.fromEntries(Object.entries(hseScores).map(([dimension, score]) => [dimension, hseRisk(score)]));
 
     const cleanId = employeeId.trim().slice(0, 64);
+    const cleanDepartment = typeof department === 'string' ? department.trim().slice(0, 128) : '';
     const record = {
       employeeId: cleanId,
+      department: cleanDepartment,
       submittedAt: new Date().toISOString(),
       answers: cleanAnswers,
       pssScore: totalScore,
