@@ -632,19 +632,21 @@
       const tableWrap = el('div','wb-table-wrap');
       const table = document.createElement('table'); table.className='wb-table';
       const thead = document.createElement('thead');
-      thead.innerHTML = '<tr><th>Employee ID</th><th>Submitted</th><th>PSS-10</th><th>Status</th></tr>';
+      thead.innerHTML = '<tr><th>Employee ID</th><th>Submitted</th><th>PSS-10</th><th>HSE result</th><th>Status</th></tr>';
       const tbody = document.createElement('tbody');
       data.forEach((r)=>{
         const tr = document.createElement('tr'); tr.className='clickable';
         const score = r.pssScore !== undefined ? r.pssScore : pssScore(r.answers || {});
+        const hseSummaryResult = hseSummary(r);
         const flag = needsFollowup(r);
         tr.innerHTML = `
           <td style="font-family:'IBM Plex Mono',monospace;">${escapeHtml(r.employeeId)}</td>
           <td>${formatDate(r.submittedAt)}</td>
           <td>${score !== null ? score + ' / 40' : '\u2014'}</td>
+          <td>${hseSummaryResult}</td>
           <td></td>
         `;
-        const statusTd = tr.children[3];
+        const statusTd = tr.children[4];
         const flagEl = el('span', 'wb-flag ' + (flag ? 'warn' : 'ok'));
         flagEl.textContent = flag ? 'Follow-up' : 'Stable';
         statusTd.appendChild(flagEl);
@@ -666,7 +668,18 @@
   function needsFollowup(r){
     if(r.answers && r.answers.followup === 'Yes') return true;
     const score = r.pssScore !== undefined ? r.pssScore : pssScore(r.answers || {});
-    return score >= 27;
+    if(score >= 27) return true;
+    return Object.values(r.hseRiskLevels || {}).some(level => level === 'Critical Risk' || level === 'High Risk');
+  }
+
+  function hseSummary(record){
+    if(!record.hseScores) return '\u2014';
+    const scores = Object.values(record.hseScores).filter(Number.isFinite);
+    if(!scores.length) return '\u2014';
+    const average = scores.reduce((sum, score)=>sum + score, 0) / scores.length;
+    const riskLevels = Object.values(record.hseRiskLevels || {});
+    const needsAttention = riskLevels.some(level => level === 'Critical Risk' || level === 'High Risk');
+    return `${average.toFixed(2)} / 5 · ${needsAttention ? 'Needs attention' : 'Stable'}`;
   }
 
   function renderDetailModal(record){
@@ -677,6 +690,19 @@
     const score = record.pssScore !== undefined ? record.pssScore : pssScore(record.answers || {});
     const band = el('div','wb-note'); band.textContent = `PSS-10 score: ${score} / 40 — ${pssBand(score)}`;
     modal.appendChild(h); modal.appendChild(meta); modal.appendChild(band);
+
+    if(record.hseScores){
+      const hseHeading = el('div','wb-qnum'); hseHeading.textContent = 'HSE Management Standards evaluation'; hseHeading.style.marginTop='22px';
+      modal.appendChild(hseHeading);
+      const hseTable = document.createElement('table'); hseTable.className='wb-table';
+      Object.entries(record.hseScores).forEach(([dimension, value])=>{
+        const row = document.createElement('tr');
+        const risk = record.hseRiskLevels && record.hseRiskLevels[dimension] ? record.hseRiskLevels[dimension] : hseRisk(value);
+        row.innerHTML = `<td>${escapeHtml(dimension)}</td><td>${Number(value).toFixed(2)} / 5</td><td>${escapeHtml(risk)}</td>`;
+        hseTable.appendChild(row);
+      });
+      modal.appendChild(hseTable);
+    }
 
     QUESTIONS.forEach(q=>{
       const val = record.answers[q.id];
