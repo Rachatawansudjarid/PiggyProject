@@ -108,6 +108,16 @@
 
   .wb-qnum{ font-family:'IBM Plex Mono', monospace; font-size:12px; color:var(--ink-soft); margin-bottom:10px; }
   .wb-q{ font-family:'Fraunces', Georgia, serif; font-size:22px; font-weight:600; color:var(--ink); margin:0 0 22px; line-height:1.35; }
+  .wb-question-table-wrap{ overflow-x:auto; margin-top:8px; }
+  table.wb-question-table{ width:100%; min-width:760px; border-collapse:collapse; font-size:13px; }
+  table.wb-question-table th, table.wb-question-table td{ border-bottom:1px solid var(--line); padding:12px 8px; }
+  table.wb-question-table th{ background:#F0F3EE; color:var(--ink-soft); font-size:11px; font-weight:600; line-height:1.35; text-align:center; vertical-align:bottom; }
+  table.wb-question-table th:first-child{ width:43%; text-align:left; }
+  table.wb-question-table td:first-child{ color:var(--ink); line-height:1.45; padding-left:0; padding-right:18px; }
+  table.wb-question-table td:not(:first-child){ text-align:center; }
+  table.wb-question-table tr:last-child td{ border-bottom:0; }
+  .wb-choice{ width:20px; height:20px; accent-color:var(--teal); cursor:pointer; }
+  .wb-choice-label{ display:flex; align-items:center; justify-content:center; min-height:30px; cursor:pointer; }
   .wb-scale{ display:flex; flex-direction:column; gap:8px; }
   .wb-opt{
     display:flex; align-items:center; gap:14px; padding:13px 16px; border-radius:10px;
@@ -169,6 +179,11 @@
   .wb-close{ margin-top:20px; width:100%; }
   .wb-back{ font-size:12.5px; color:var(--ink-soft); cursor:pointer; margin-bottom:16px; display:inline-flex; align-items:center; gap:5px; }
   .wb-back:hover{ color:var(--teal-deep); }
+  @media (max-width:640px){
+    .wb-card{ padding:22px 16px; }
+    table.wb-question-table{ min-width:700px; }
+    table.wb-question-table th:first-child{ width:38%; }
+  }
 </style>
 </head>
 <body>
@@ -181,16 +196,16 @@
   const shell = document.getElementById('wb-shell');
 
   const QUESTIONS = [
-    { id:'pss1', q:'ในสัปดาห์ที่ผ่านมา คุณรู้สึกว่ามีสิ่งที่ต้องจัดการมากจนไม่สามารถควบคุมได้หรือไม่?', type:'scale', labels:['ไม่เคย','ค่อนข้างไม่','บางครั้ง','ค่อนข้างบ่อย','บ่อยมาก'] },
-    { id:'pss2', q:'ในสัปดาห์ที่ผ่านมา คุณรู้สึกว่าคุณกังวลเกี่ยวกับสิ่งที่จะเกิดขึ้นในอนาคตหรือไม่?', type:'scale', labels:['ไม่เคย','ค่อนข้างไม่','บางครั้ง','ค่อนข้างบ่อย','บ่อยมาก'] },
-    { id:'pss3', q:'ในสัปดาห์ที่ผ่านมา คุณรู้สึกว่าความเครียดมีมากจนคุณไม่สามารถจัดการได้หรือไม่?', type:'scale', labels:['ไม่เคย','ค่อนข้างไม่','บางครั้ง','ค่อนข้างบ่อย','บ่อยมาก'] },
-    { id:'pss4', q:'ในสัปดาห์ที่ผ่านมา คุณสามารถควบคุมสิ่งที่เกิดขึ้นในชีวิตของคุณได้หรือไม่?', type:'scale', labels:['ไม่เคย','ค่อนข้างไม่','บางครั้ง','ค่อนข้างบ่อย','บ่อยมาก'] },
-    { id:'pss5', q:'ในสัปดาห์ที่ผ่านมา คุณรู้สึกว่าความเครียดเพิ่มขึ้นเรื่อย ๆ จนทำให้สิ่งต่าง ๆ ที่ต้องทำดูหนักมากหรือไม่?', type:'scale', labels:['ไม่เคย','ค่อนข้างไม่','บางครั้ง','ค่อนข้างบ่อย','บ่อยมาก'] },
-    { id:'pss6', q:'ในสัปดาห์ที่ผ่านมา คุณรู้สึกว่าคุณมีความสามารถควบคุมความกังวลและความเครียดของตนเองได้หรือไม่?', type:'scale', labels:['ไม่เคย','ค่อนข้างไม่','บางครั้ง','ค่อนข้างบ่อย','บ่อยมาก'] },
-    { id:'pss7', q:'ในสัปดาห์ที่ผ่านมา คุณรู้สึกว่าคุณมีปัญหาหรือความยากลำบากในการจัดการงานหรือเรื่องที่ต้องทำหรือไม่?', type:'scale', labels:['ไม่เคย','ค่อนข้างไม่','บางครั้ง','ค่อนข้างบ่อย','บ่อยมาก'] },
-    { id:'pss8', q:'ในสัปดาห์ที่ผ่านมา คุณรู้สึกว่าคุณสามารถจัดการกับความกังวลต่าง ๆ ได้ดีหรือไม่?', type:'scale', labels:['ไม่เคย','ค่อนข้างไม่','บางครั้ง','ค่อนข้างบ่อย','บ่อยมาก'] },
-    { id:'pss9', q:'ในสัปดาห์ที่ผ่านมา คุณรู้สึกว่าความเครียดทำให้คุณหงุดหงิดหรือโกรธมากขึ้นหรือไม่?', type:'scale', labels:['ไม่เคย','ค่อนข้างไม่','บางครั้ง','ค่อนข้างบ่อย','บ่อยมาก'] },
-    { id:'pss10', q:'ในสัปดาห์ที่ผ่านมา คุณรู้สึกว่าความเครียดทำให้คุณต้องเผชิญกับความยากลำบากมากขึ้นหรือไม่?', type:'scale', labels:['ไม่เคย','ค่อนข้างไม่','บางครั้ง','ค่อนข้างบ่อย','บ่อยมาก'] }
+    { id:'pss1', q:'1 เดือนที่ผ่านมา คุณรู้สึกว่ามีสิ่งที่ต้องจัดการมากจนไม่สามารถควบคุมได้หรือไม่?', type:'scale', labels:['ไม่เคย','ค่อนข้างไม่','บางครั้ง','ค่อนข้างบ่อย','บ่อยมาก'] },
+    { id:'pss2', q:'1 เดือนที่ผ่านมา คุณรู้สึกว่าคุณกังวลเกี่ยวกับสิ่งที่จะเกิดขึ้นในอนาคตหรือไม่?', type:'scale', labels:['ไม่เคย','ค่อนข้างไม่','บางครั้ง','ค่อนข้างบ่อย','บ่อยมาก'] },
+    { id:'pss3', q:'1 เดือนที่ผ่านมา คุณรู้สึกว่าความเครียดมีมากจนคุณไม่สามารถจัดการได้หรือไม่?', type:'scale', labels:['ไม่เคย','ค่อนข้างไม่','บางครั้ง','ค่อนข้างบ่อย','บ่อยมาก'] },
+    { id:'pss4', q:'1 เดือนที่ผ่านมา คุณสามารถควบคุมสิ่งที่เกิดขึ้นในชีวิตของคุณได้หรือไม่?', type:'scale', labels:['ไม่เคย','ค่อนข้างไม่','บางครั้ง','ค่อนข้างบ่อย','บ่อยมาก'] },
+    { id:'pss5', q:'1 เดือนที่ผ่านมา คุณรู้สึกว่าความเครียดเพิ่มขึ้นเรื่อย ๆ จนทำให้สิ่งต่าง ๆ ที่ต้องทำดูหนักมากหรือไม่?', type:'scale', labels:['ไม่เคย','ค่อนข้างไม่','บางครั้ง','ค่อนข้างบ่อย','บ่อยมาก'] },
+    { id:'pss6', q:'1 เดือนที่ผ่านมา คุณรู้สึกว่าคุณมีความสามารถควบคุมความกังวลและความเครียดของตนเองได้หรือไม่?', type:'scale', labels:['ไม่เคย','ค่อนข้างไม่','บางครั้ง','ค่อนข้างบ่อย','บ่อยมาก'] },
+    { id:'pss7', q:'1 เดือนที่ผ่านมา คุณรู้สึกว่าคุณมีปัญหาหรือความยากลำบากในการจัดการงานหรือเรื่องที่ต้องทำหรือไม่?', type:'scale', labels:['ไม่เคย','ค่อนข้างไม่','บางครั้ง','ค่อนข้างบ่อย','บ่อยมาก'] },
+    { id:'pss8', q:'1 เดือนที่ผ่านมา คุณรู้สึกว่าคุณสามารถจัดการกับความกังวลต่าง ๆ ได้ดีหรือไม่?', type:'scale', labels:['ไม่เคย','ค่อนข้างไม่','บางครั้ง','ค่อนข้างบ่อย','บ่อยมาก'] },
+    { id:'pss9', q:'1 เดือนที่ผ่านมา คุณรู้สึกว่าความเครียดทำให้คุณหงุดหงิดหรือโกรธมากขึ้นหรือไม่?', type:'scale', labels:['ไม่เคย','ค่อนข้างไม่','บางครั้ง','ค่อนข้างบ่อย','บ่อยมาก'] },
+    { id:'pss10', q:'1 เดือนที่ผ่านมา คุณรู้สึกว่าความเครียดทำให้คุณต้องเผชิญกับความยากลำบากมากขึ้นหรือไม่?', type:'scale', labels:['ไม่เคย','ค่อนข้างไม่','บางครั้ง','ค่อนข้างบ่อย','บ่อยมาก'] }
   ];
 
   let state = {
@@ -327,69 +342,56 @@
 
   // ---------- QUIZ SCREEN ----------
   function screenQuiz(){
-    const q = QUESTIONS[state.step];
     const wrap = el('div');
     wrap.appendChild(eyebrow('Check-in \u00b7 ' + state.empId));
 
-    const trail = el('div','wb-trail');
-    QUESTIONS.forEach((_,i)=>{
-      const d = el('div','wb-dot' + (i<state.step?' done':i===state.step?' active':''));
-      trail.appendChild(d);
-    });
-
     const card = el('div','wb-card');
-    const qnum = el('div','wb-qnum'); qnum.textContent = `Question ${state.step+1} of ${QUESTIONS.length}`;
-    const qtext = el('div','wb-q'); qtext.textContent = q.q;
+    const qnum = el('div','wb-qnum'); qnum.textContent = 'Answer all 10 questions';
+    const qtext = el('div','wb-q'); qtext.textContent = 'ในช่วง 1 เดือนที่ผ่านมา';
     card.appendChild(qnum); card.appendChild(qtext);
 
-    if(q.type === 'scale'){
-      const box = el('div','wb-scale');
-      q.labels.forEach((lab,i)=>{
-        const val = i;
-        const opt = el('div','wb-opt' + (Number(state.answers[q.id])===val?' sel':''));
-        const n = el('div','n'); n.textContent = val;
-        const t = el('div','t'); t.textContent = lab;
-        opt.appendChild(n); opt.appendChild(t);
-        opt.addEventListener('click', ()=>{ state.answers[q.id]=val; render(); });
-        box.appendChild(opt);
+    const tableWrap = el('div','wb-question-table-wrap');
+    const table = document.createElement('table'); table.className='wb-question-table';
+    const thead = document.createElement('thead');
+    const headerRow = document.createElement('tr');
+    const questionHeader = document.createElement('th'); questionHeader.textContent = 'คำถาม'; headerRow.appendChild(questionHeader);
+    QUESTIONS[0].labels.forEach(label=>{
+      const th = document.createElement('th'); th.textContent = label; headerRow.appendChild(th);
+    });
+    thead.appendChild(headerRow); table.appendChild(thead);
+
+    const tbody = document.createElement('tbody');
+    QUESTIONS.forEach((question, questionIndex)=>{
+      const row = document.createElement('tr');
+      const questionCell = document.createElement('td');
+      questionCell.textContent = `${questionIndex + 1}. ${question.q}`;
+      row.appendChild(questionCell);
+      question.labels.forEach((_, value)=>{
+        const cell = document.createElement('td');
+        const label = el('label','wb-choice-label');
+        const input = document.createElement('input');
+        input.className='wb-choice'; input.type='radio'; input.name=question.id;
+        input.value = value; input.checked = Number(state.answers[question.id]) === value;
+        input.setAttribute('aria-label', `${question.q}: ${question.labels[value]}`);
+        input.addEventListener('change', ()=>{
+          state.answers[question.id] = value;
+          next.disabled = !QUESTIONS.every(item => state.answers[item.id] !== undefined && state.answers[item.id] !== '');
+        });
+        label.appendChild(input); cell.appendChild(label); row.appendChild(cell);
       });
-      card.appendChild(box);
-    } else if(q.type === 'text'){
-      const ta = document.createElement('textarea');
-      ta.className='wb-textarea'; ta.placeholder='Optional \u2014 share as much or as little as you\u2019d like.';
-      ta.value = state.answers[q.id] || '';
-      ta.addEventListener('input', e=>{ state.answers[q.id]=e.target.value; });
-      card.appendChild(ta);
-    } else if(q.type === 'yesno'){
-      const box = el('div','wb-yn');
-      ['Yes','No'].forEach(lab=>{
-        const opt = el('div','wb-opt' + (state.answers[q.id]===lab?' sel':''));
-        const t = el('div','t'); t.textContent = lab;
-        opt.appendChild(t);
-        opt.addEventListener('click', ()=>{ state.answers[q.id]=lab; render(); });
-        box.appendChild(opt);
-      });
-      card.appendChild(box);
-    }
+      tbody.appendChild(row);
+    });
+    table.appendChild(tbody); tableWrap.appendChild(table); card.appendChild(tableWrap);
 
     const row = el('div','wb-row');
-    const back = el('button','wb-btn ghost'); back.textContent = state.step===0 ? 'Cancel' : 'Back';
-    back.addEventListener('click', ()=>{
-      if(state.step===0){ set({screen:'entry', empId:'', empName:'', error:''}); }
-      else { set({ step: state.step-1 }); }
-    });
-    const canNext = q.type==='text' || (state.answers[q.id] !== undefined && state.answers[q.id] !== '');
-    const next = el('button','wb-btn'); next.textContent = state.step === QUESTIONS.length-1 ? 'Submit' : 'Next';
-    next.disabled = !canNext;
-    next.addEventListener('click', async ()=>{
-      if(!canNext) return;
-      if(state.step === QUESTIONS.length-1){ await submit(); }
-      else { set({ step: state.step+1 }); }
-    });
+    const back = el('button','wb-btn ghost'); back.textContent = 'Cancel';
+    back.addEventListener('click', ()=> set({screen:'entry', empId:'', empName:'', error:''}));
+    const canSubmit = QUESTIONS.every(question => state.answers[question.id] !== undefined && state.answers[question.id] !== '');
+    const next = el('button','wb-btn'); next.textContent = 'Submit'; next.disabled = !canSubmit;
+    next.addEventListener('click', async ()=>{ if(canSubmit) await submit(); });
     row.appendChild(back); row.appendChild(next);
     card.appendChild(row);
 
-    wrap.appendChild(trail);
     wrap.appendChild(card);
     shell.appendChild(wrap);
   }
